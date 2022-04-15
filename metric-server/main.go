@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
+	"github.com/manudelca/tp1-distribuidos1/metric-server/common"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -32,6 +35,11 @@ func InitConfig() (*viper.Viper, error) {
 		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
 	}
 
+	// Parse int variables and return an error if they cannot be parsed
+	if _, err := strconv.Atoi(v.GetString("workers")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse SERVER_LISTENBACKLOG env var as int.")
+	}
+
 	return v, nil
 }
 
@@ -53,6 +61,7 @@ func InitLogger(logLevel string) error {
 func PrintConfig(v *viper.Viper) {
 	logrus.Infof("Metric-server configuration")
 	logrus.Infof("Workers: %s", v.GetString("workers"))
+	logrus.Infof("Port: %s", v.GetString("port"))
 	logrus.Infof("Log Level: %s", v.GetString("log.level"))
 }
 
@@ -68,4 +77,16 @@ func main() {
 
 	// Print program config with debugging purposes
 	PrintConfig(v)
+
+	serverConfig := common.ServerConfig{
+		Port:    v.GetString("port"),
+		Workers: v.GetInt("Workers"),
+	}
+
+	server, err := common.NewServer(serverConfig)
+	if err != nil {
+		logrus.Fatalf("[SERVER] Could not create Server. Error %s", err)
+		return
+	}
+	server.Run()
 }
