@@ -1,0 +1,9 @@
+version: '3'
+services:
+  metric-server:
+    container_name: metric-server
+    image: metric-server:latest
+    entrypoint: /metric-server
+    environment:
+      - WORKERS=7
+      - LOG_LEVEL=DEBUG
