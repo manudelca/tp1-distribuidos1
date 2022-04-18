@@ -2,14 +2,15 @@ package util
 
 import "net"
 
-func ReadFromConnection(conn net.Conn, bytes []byte, bytesToRead int) error {
+func ReadFromConnection(conn net.Conn, bytesToRead int) ([]byte, error) {
+	bytes := make([]byte, bytesToRead)
 	amountRead := 0
 	for amountRead < bytesToRead {
 		bytesRead, err := conn.Read(bytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		amountRead = bytesRead
 	}
-	return nil
+	return bytes, nil
 }
