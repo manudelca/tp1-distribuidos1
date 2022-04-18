@@ -2,22 +2,11 @@ package common
 
 import (
 	"encoding/binary"
+	"math"
 	"net"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/util"
 )
-
-type MsgType uint8
-
-const (
-	Metric MsgType = iota
-	Query
-)
-
-// struct Message {
-// 	Msg
-
-// }
 
 func getLen(clientConn net.Conn) (uint16, error) {
 	uint16Size := 16
@@ -29,23 +18,36 @@ func getLen(clientConn net.Conn) (uint16, error) {
 	return len, nil
 }
 
-func GetMessage(clientConn net.Conn) (, error) {
- 	len, err := getLen(clientConn)
- 	if err != nil {
- 		return nil, err
- 	}
-	bytes, err := util.ReadFromConnection(clientConn, len)
+func GetMessage(clientConn net.Conn) (Message, error) {
+	len, err := getLen(clientConn)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := util.ReadFromConnection(clientConn, int(len))
 	if err != nil {
 		return nil, err
 	}
 	switch msgType := bytes[0]; msgType {
-	case byte(Metric):
-		
-	case byte(Query):
-	
-	case default:
+	case byte(METRIC):
+		return buildMetricMessage(bytes)
+	case byte(QUERY):
+		return buildQueryMessage(bytes)
+		// case default:
 		// error!!!
 	}
-	// Y ahora? Como creo el struct y etc? Igual estoy un toque mataduki tbh...
-	// Sigo con el otro tp
+}
+
+func buildMetricMessage(bytes []byte) (MetricMessage, error) {
+	value := math.Float32frombits(binary.BigEndian.Uint32(bytes[:32]))
+	metricId := string(bytes[32:])
+	// Como hago el parseo de los errores?
+	return MetricMessage{
+		Value:    value,
+		MetricId: metricId,
+	}, nil
+}
+
+func buildQueryMessage(bytes []byte) (QueryMessage, error) {
+	// Esto es mas dificil tbh
+	return QueryMessage{}, nil
 }
