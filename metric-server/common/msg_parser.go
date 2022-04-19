@@ -2,15 +2,34 @@ package common
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 	"net"
+	"strconv"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/util"
+	"github.com/pkg/errors"
 )
 
+type InvalidMessageTypeError struct {
+	msgType MsgType
+}
+
+func (e InvalidMessageTypeError) Error() string {
+	return fmt.Sprintf("Invalid message type: %d", e.msgType)
+}
+
+type InvalidMetricMessageFormatError struct {
+	errorMsg string
+}
+
+func (e InvalidMetricMessageFormatError) Error() string {
+	return e.errorMsg
+}
+
 func getLen(clientConn net.Conn) (uint16, error) {
-	uint16Size := 16
-	bytes, err := util.ReadFromConnection(clientConn, uint16Size)
+	uint16BytesSize := 2
+	bytes, err := util.ReadFromConnection(clientConn, uint16BytesSize)
 	if err != nil {
 		return 0, err
 	}
@@ -32,15 +51,20 @@ func GetMessage(clientConn net.Conn) (Message, error) {
 		return buildMetricMessage(bytes)
 	case byte(QUERY):
 		return buildQueryMessage(bytes)
-		// case default:
-		// error!!!
+	default:
+		return nil, InvalidMessageTypeError{msgType: MsgType(msgType)}
 	}
 }
 
 func buildMetricMessage(bytes []byte) (MetricMessage, error) {
-	value := math.Float32frombits(binary.BigEndian.Uint32(bytes[:32]))
-	metricId := string(bytes[32:])
-	// Como hago el parseo de los errores?
+	if len(bytes) < (4 + 1) {
+		return MetricMessage{}, InvalidMetricMessageFormatError{errorMsg: "There should be a 32 bits float and at least 1 character for MetricId"}
+	}
+	if _, err := strconv.ParseFloat(string(bytes[:4]), 32); err != nil {
+		return MetricMessage{}, errors.Wrapf(err, "Value field could not be parsed as 32 bits Float")
+	}
+	value := math.Float32frombits(binary.BigEndian.Uint32(bytes[:4]))
+	metricId := string(bytes[4:])
 	return MetricMessage{
 		Value:    value,
 		MetricId: metricId,
