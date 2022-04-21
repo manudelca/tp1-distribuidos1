@@ -31,7 +31,10 @@ func getLen(clientConn net.Conn) (uint16, error) {
 	uint16BytesSize := 2
 	bytes, err := util.ReadFromConnection(clientConn, uint16BytesSize)
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrapf(err, "Could not read message len from connection")
+	}
+	if _, err := strconv.ParseUint(string(bytes), 10, 16); err != nil {
+		return 0, errors.Wrapf(err, "Len field could not be parsed as 16 bits uint")
 	}
 	len := binary.BigEndian.Uint16(bytes)
 	return len, nil
@@ -40,11 +43,11 @@ func getLen(clientConn net.Conn) (uint16, error) {
 func GetMessage(clientConn net.Conn) (Message, error) {
 	len, err := getLen(clientConn)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to get length of message")
 	}
 	bytes, err := util.ReadFromConnection(clientConn, int(len))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Failed to read message")
 	}
 	switch msgType := bytes[0]; msgType {
 	case byte(METRIC):
@@ -61,7 +64,7 @@ func buildMetricMessage(bytes []byte) (MetricMessage, error) {
 		return MetricMessage{}, InvalidMetricMessageFormatError{errorMsg: "There should be a 32 bits float and at least 1 character for MetricId"}
 	}
 	if _, err := strconv.ParseFloat(string(bytes[:4]), 32); err != nil {
-		return MetricMessage{}, errors.Wrapf(err, "Value field could not be parsed as 32 bits Float")
+		return MetricMessage{}, errors.Wrapf(err, "\"Value\" field could not be parsed as 32 bits Float")
 	}
 	value := math.Float32frombits(binary.BigEndian.Uint32(bytes[:4]))
 	metricId := string(bytes[4:])
