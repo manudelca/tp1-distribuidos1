@@ -2,36 +2,35 @@ package common
 
 import "time"
 
-type Message interface {
-	GetType() MsgType
+type Event interface {
+	GetType() EventType
 }
 
-type MsgType uint8
+type EventType uint8
 
 const (
-	METRIC MsgType = iota
+	METRIC EventType = iota
 	QUERY
 )
 
-type MetricMessage struct {
+type MetricEvent struct {
 	MetricId string
 	Value    float32
 }
 
-func (m MetricMessage) GetType() MsgType {
+func (m MetricEvent) GetType() EventType {
 	return METRIC
 }
 
-type QueryMessage struct {
+type QueryEvent struct {
 	MetricId               string
 	Aggregation            AggregationType
 	AggregationWindowsSecs float32
-	Limit                  float32
 	From                   time.Time
 	To                     time.Time
 }
 
-func (m QueryMessage) GetType() MsgType {
+func (m QueryEvent) GetType() EventType {
 	return QUERY
 }
 
