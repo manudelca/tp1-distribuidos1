@@ -25,3 +25,19 @@ type InvalidMessageFormatError struct {
 func (e InvalidMessageFormatError) Error() string {
 	return e.errorMsg
 }
+
+type InvalidMetricIdFieldError struct {
+	errorMsg string
+}
+
+func (e InvalidMetricIdFieldError) Error() string {
+	return e.errorMsg
+}
+
+type InvalidValueFieldError struct {
+	errorMsg string
+}
+
+func (e InvalidValueFieldError) Error() string {
+	return e.errorMsg
+}

@@ -13,8 +13,8 @@ import (
 )
 
 func getLen(clientConn net.Conn) (uint16, error) {
-	uint16BytesSize := 2
-	bytes, err := util.ReadFromConnection(clientConn, uint16BytesSize)
+	uint16Size := 2
+	bytes, err := util.ReadFromConnection(clientConn, uint16Size)
 	if err != nil {
 		return 0, errors.Wrapf(err, "Could not read message len from connection")
 	}
@@ -36,9 +36,9 @@ func GetMessage(clientConn net.Conn) (common.Event, error) {
 	}
 	switch eventType := bytes[0]; eventType {
 	case byte(common.METRIC):
-		return buildMetricMessage(bytes)
+		return buildMetricMessage(bytes[1:])
 	case byte(common.QUERY):
-		return buildQueryMessage(bytes)
+		return buildQueryMessage(bytes[1:])
 	default:
 		return nil, InvalidEventTypeError{eventType: uint8(eventType)}
 	}
@@ -49,14 +49,14 @@ func buildMetricMessage(message []byte) (common.MetricEvent, error) {
 	for i := 0; i < len(bytes); {
 		switch fieldType := bytes[i]; fieldType {
 		case byte(METRICID):
-			metricId, newIndex , err := parseMetricId(message[i+1:], i+1)
+			metricId, newIndex , err := parseMetricId(message[i:], i)
 			if err != nil {
 				return nil, errors.Wrapf(err, "Could not parse MetricId when trying to build MetricEvent from message received")
 			}
 			metricEvent.MetricId = metricId
 			i = newIdex
 		case byte(VALUE):
-			value, newIndex , err := parseValue(message[i+1:], i+1)
+			value, newIndex , err := parseValue(message[i:], i)
 			if err != nil {
 				return nil, errors.Wrapf(err, "Could not parse Value when trying to build MetricEvent from message received")
 			}
@@ -68,19 +68,6 @@ func buildMetricMessage(message []byte) (common.MetricEvent, error) {
 		}
 	}
 	return metricEvent.Validate()
-	
-	// if len(bytes) < (4 + 1) {
-	// 	return common.MetricEvent{}, InvalidMetricMessageFormatError{errorMsg: "There should be a 32 bits float and at least 1 character for MetricId"}
-	// }
-	// if _, err := strconv.ParseFloat(string(bytes[:4]), 32); err != nil {
-	// 	return common.MetricEvent{}, errors.Wrapf(err, "\"Value\" field could not be parsed as 32 bits Float")
-	// }
-	// value := math.Float32frombits(binary.BigEndian.Uint32(bytes[:4]))
-	// metricId := string(bytes[4:])
-	// return common.MetricEvent{
-	// 	Value:    value,
-	// 	MetricId: metricId,
-	// }, nil
 }
 
 func buildQueryMessage(bytes []byte) (common.QueryEvent, error) {

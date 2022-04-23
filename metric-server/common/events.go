@@ -22,6 +22,16 @@ func (m MetricEvent) GetType() EventType {
 	return METRIC
 }
 
+func (m MetricEvent) Validate() (MetricEvent, error) {
+	if m.MetricId == "" {
+		return MetricEvent{}, InvalidMetricEventError{errorMsg: "Missing metricId"}
+	}
+	if m.Value == 0 { //TODO: Find another way of checking if the Value was set...
+		return MetricEvent{}, InvalidMetricEventError{errorMsg: "Missing value"}
+	}
+	return m, nil
+}
+
 type QueryEvent struct {
 	MetricId               string
 	Aggregation            AggregationType
@@ -42,3 +52,11 @@ const (
 	MAX
 	COUNT
 )
+
+type InvalidMetricEventError struct {
+	errorMsg string
+}
+
+func (e InvalidMetricEventError) Error() string {
+	return e.errorMsg
+}
