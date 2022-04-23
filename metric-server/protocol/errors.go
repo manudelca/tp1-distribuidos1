@@ -34,10 +34,26 @@ func (e InvalidMetricIdFieldError) Error() string {
 	return e.errorMsg
 }
 
-type InvalidValueFieldError struct {
+type InvalidFloatFieldError struct {
 	errorMsg string
 }
 
-func (e InvalidValueFieldError) Error() string {
+func (e InvalidFloatFieldError) Error() string {
+	return e.errorMsg
+}
+
+type InvalidAggregationFieldError struct {
+	errorMsg string
+}
+
+func (e InvalidAggregationFieldError) Error() string {
+	return e.errorMsg
+}
+
+type InvalidDateFieldError struct {
+	errorMsg string
+}
+
+func (e InvalidDateFieldError) Error() string {
 	return e.errorMsg
 }

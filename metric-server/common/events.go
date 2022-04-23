@@ -40,8 +40,12 @@ type QueryEvent struct {
 	To                     time.Time
 }
 
-func (m QueryEvent) GetType() EventType {
+func (q QueryEvent) GetType() EventType {
 	return QUERY
+}
+
+func (q QueryEvent) Validate() (QueryEvent, error) {
+	return q, nil
 }
 
 type AggregationType uint8

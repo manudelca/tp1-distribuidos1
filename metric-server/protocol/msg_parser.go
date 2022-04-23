@@ -3,7 +3,6 @@ package protocol
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 	"net"
 	"strconv"
 
@@ -46,77 +45,73 @@ func GetMessage(clientConn net.Conn) (common.Event, error) {
 
 func buildMetricMessage(message []byte) (common.MetricEvent, error) {
 	metricEvent := common.MetricEvent{}
-	for i := 0; i < len(bytes); {
-		switch fieldType := bytes[i]; fieldType {
+	for i := 0; i < len(message); {
+		switch fieldType := message[i]; fieldType {
 		case byte(METRICID):
-			metricId, newIndex , err := parseMetricId(message[i:], i)
+			metricId, newIndex, err := parseMetricId(message[i:], i)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Could not parse MetricId when trying to build MetricEvent from message received")
+				return common.MetricEvent{}, errors.Wrapf(err, "Could not parse MetricId when trying to build MetricEvent from message received")
 			}
 			metricEvent.MetricId = metricId
-			i = newIdex
+			i = newIndex
 		case byte(VALUE):
-			value, newIndex , err := parseValue(message[i:], i)
+			value, newIndex, err := parseValue(message[i:], i)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Could not parse Value when trying to build MetricEvent from message received")
+				return common.MetricEvent{}, errors.Wrapf(err, "Could not parse Value when trying to build MetricEvent from message received")
 			}
 			metricEvent.Value = value
-			i = newIdex
+			i = newIndex
 		default:
-			err := fmt.SPrintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType) 
-			return nil, InvalidMessageFormatError{errorMsg: err}
+			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)
+			return common.MetricEvent{}, InvalidMessageFormatError{errorMsg: err}
 		}
 	}
 	return metricEvent.Validate()
 }
 
-func buildQueryMessage(bytes []byte) (common.QueryEvent, error) {
+func buildQueryMessage(message []byte) (common.QueryEvent, error) {
 	query := common.QueryEvent{}
-	for i := 0; i < len(bytes); {
-		switch (bytes[i]) {
+	for i := 0; i < len(message); {
+		switch fieldType := message[i]; fieldType {
 		case byte(METRICID):
-		case byte(VALUE):
+			metricId, newIndex, err := parseMetricId(message[i:], i)
+			if err != nil {
+				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse MetricId when trying to build QueryMessage from message received")
+			}
+			query.MetricId = metricId
+			i = newIndex
 		case byte(AGGREGATION):
-			// value, i, err := getAggregationField()
-			// if err {
-			// 
-			// }
-			// metric.Field = value
+			aggregation, newIndex, err := parseAggregation(message[i:], i)
+			if err != nil {
+				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse Aggregation when trying to build QueryMessage from message received")
+			}
+			query.Aggregation = aggregation
+			i = newIndex
 		case byte(AGGREGATIONWINDOWSSECS):
+			aggregationWindowsSecs, newIndex, err := parseAggregationWindowsSecs(message[i:], i)
+			if err != nil {
+				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse AggregationWindowsSecs when trying to build QueryMessage from message received")
+			}
+			query.AggregationWindowsSecs = aggregationWindowsSecs
+			i = newIndex
 		case byte(FROM):
+			from, newIndex, err := parseFrom(message[i:], i)
+			if err != nil {
+				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse From when trying to build QueryMessage from message received")
+			}
+			query.From = from
+			i = newIndex
 		case byte(TO):
+			to, newIndex, err := parseTo(message[i:], i)
+			if err != nil {
+				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse To when trying to build QueryMessage from message received")
+			}
+			query.To = to
+			i = newIndex
 		default:
-			return nil, //Error custom
+			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)
+			return common.QueryEvent{}, InvalidMessageFormatError{errorMsg: err}
 		}
 	}
 	return query.Validate()
 }
-
-// func buildQueryMessage(bytes []byte) (QueryMessage, error) {
-// 	// Esto es mas dificil tbh
-// 	aggregation := AggregationType(bytes[0])
-// 	if _, err := strconv.ParseFloat(string(bytes[1:4]), 32); err != nil {
-// 		return QueryMessage{}, errors.Wrapf(err, "\"Value\" field could not be parsed as 32 bits Float")
-// 	}
-// 	aggregationWindowsSecs := math.Float32frombits(binary.BigEndian.Uint32(bytes[1:4]))
-
-// 	layout := "2006-01-02 03:04:05"
-// 	if bytes[5] > 0 {
-// 		from, err := time.Parse(layout, string(bytes[6:len(layout)+6]))
-// 		if err != nil {
-
-// 		}
-// 		to, err := time.Parse(layout, string(bytes[len(layout)+6:len(layout)+6+len(layout)+6]))
-// 		if err != nil {
-
-// 		}
-// 	}
-// 	hasTimeInterval := (bytes[5])
-
-// 	return QueryMessage{
-// 		Aggregation:            aggregation,
-// 		AggregationWindowsSecs: aggregationWindowsSecs,
-// 		To:                     to,
-// 		From:                   from,
-// 	}, nil
-// }
