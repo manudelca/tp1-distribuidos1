@@ -28,7 +28,7 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("type")
 
 	if err := v.ReadInConfig(); err != nil {
-		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
+		fmt.Println("Configuration could not be read from config file. Using env variables instead")
 	}
 
 	if _, err := time.ParseDuration(v.GetString("loop.lapse")); err != nil {

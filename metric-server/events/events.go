@@ -16,6 +16,7 @@ const (
 type MetricEvent struct {
 	MetricId string
 	Value    float32
+	Date     time.Time
 }
 
 func (m MetricEvent) GetType() EventType {

@@ -28,3 +28,12 @@ func SendServerError(errorMsg string, clientConn net.Conn) error {
 	}
 	return nil
 }
+
+func SendSuccess(message string, clientConn net.Conn) error {
+	messageToSend := Message{MsgType: SUCCESS, Message: message}
+	err := sendMessage(messageToSend, clientConn)
+	if err != nil {
+		return errors.Wrapf(err, "Could not send success message")
+	}
+	return nil
+}

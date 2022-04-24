@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/manudelca/tp1-distribuidos1/metric-server/util"
@@ -80,6 +81,7 @@ func buildMetricMessage(message []byte) (events.MetricEvent, error) {
 	if !areAllFieldsPresent {
 		return events.MetricEvent{}, InvalidMessageFormatError{errorMsg: "Missing required fields. MetricID and Value are needed"}
 	}
+	metricEvent.Date = time.Now()
 	return metricEvent, nil
 }
 

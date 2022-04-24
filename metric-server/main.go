@@ -32,7 +32,7 @@ func InitConfig() (*viper.Viper, error) {
 	// return an error in that case
 	v.SetConfigFile("./config.yaml")
 	if err := v.ReadInConfig(); err != nil {
-		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
+		fmt.Println("Configuration could not be read from config file. Using env variables instead")
 	}
 
 	// Parse int variables and return an error if they cannot be parsed
