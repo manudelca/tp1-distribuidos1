@@ -8,11 +8,11 @@ import (
 )
 
 func HandleClientConnection(clientConn net.Conn) {
-	event, err := protocol.GetEventFromMessage(clientConn)
+	_, err := protocol.GetEventFromMessage(clientConn)
 	if err != nil {
 		logrus.Fatalf("[SERVER] Error trying to getEventFromMessage. Error: %s", err)
 	}
-	logrus.Infof("[SERVER] Event received %s", event)
+	// logrus.Infof("Event type %s succesfully processed", event.GetType())
 	// switch event.GetType() {
 	// case events.METRIC:
 	// case events.QUERY:

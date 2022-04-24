@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
@@ -25,10 +24,6 @@ func parseFloat(message []byte, i int) (float32, int, error) {
 	if len(message) < 4 {
 		errorMsg := fmt.Sprintf("The message is shorter than 4 bytes")
 		return 0, i, InvalidFloatFieldError{errorMsg: errorMsg}
-	}
-	valueBytes := message[:4]
-	if _, err := strconv.ParseUint(string(valueBytes), 10, 16); err != nil {
-		return 0, i, errors.Wrapf(err, "Could not be parsed as a float32")
 	}
 	value := math.Float32frombits(binary.BigEndian.Uint32(message[:4]))
 	return value, i + 4, nil

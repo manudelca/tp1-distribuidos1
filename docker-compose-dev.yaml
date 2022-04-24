@@ -5,6 +5,29 @@ services:
     image: metric-server:latest
     entrypoint: /metric-server
     environment:
-      - WORKERS=7
+      - COURIERS=7
       - LOG_LEVEL=DEBUG
       - PORT=12345
+    networks:
+    - testing_net
+
+  test-client-metric1:
+    container_name: test-client-metric1
+    image: test-client-metric:latest
+    entrypoint: /test-client-metric
+    environment:
+      - CLI_ID=1
+      - CLI_SERVER_ADDRESS=metric-server:12345
+      - CLI_LOOP_LAPSE=1m2s
+      - CLI_LOG_LEVEL=DEBUG
+    networks:
+      - testing_net
+    depends_on:
+      - metric-server
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24
