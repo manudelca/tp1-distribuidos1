@@ -57,3 +57,11 @@ type InvalidDateFieldError struct {
 func (e InvalidDateFieldError) Error() string {
 	return e.errorMsg
 }
+
+type MissingFieldError struct {
+	errorMsg string
+}
+
+func (e MissingFieldError) Error() string {
+	return e.errorMsg
+}

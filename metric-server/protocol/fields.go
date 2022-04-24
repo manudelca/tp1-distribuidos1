@@ -18,8 +18,7 @@ const (
 	VALUE
 	AGGREGATION
 	AGGREGATIONWINDOWSSECS
-	FROM
-	TO
+	DATEINTERVAL
 )
 
 func parseFloat(message []byte, i int) (float32, int, error) {
@@ -99,4 +98,16 @@ func parseTo(message []byte, i int) (time.Time, int, error) {
 		return date, i, errors.Wrapf(err, "Could not parse To date")
 	}
 	return date, i, nil
+}
+
+func parseDateInterval(message []byte, i int) (time.Time, time.Time, int, error) {
+	from, newIndex, err := parseDate(message, i)
+	if err != nil {
+		return from, from, i, errors.Wrapf(err, "Could not parse From date")
+	}
+	to, newIndex, err := parseDate(message, newIndex)
+	if err != nil {
+		return from, to, i, errors.Wrapf(err, "Could not parse To date")
+	}
+	return from, to, newIndex, nil
 }
