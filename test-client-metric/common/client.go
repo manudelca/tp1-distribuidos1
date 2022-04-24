@@ -96,6 +96,7 @@ loop:
 }
 
 func (c *Client) sendMetric(msgID int) {
+	logrus.Infof("About to send Metric event")
 	metric := fmt.Sprintf("metric_%d", msgID)
 	metricBytes := []byte(metric)
 	metricLen := uint8(len(metric))

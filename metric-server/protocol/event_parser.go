@@ -49,8 +49,9 @@ func buildMetricMessage(message []byte) (events.MetricEvent, error) {
 	metricEvent := events.MetricEvent{}
 	fieldsReceived := make(map[FieldType]bool)
 	for i := 0; i < len(message); {
-		logrus.Infof("FieldType received: %d", message[i])
-		switch fieldType := message[i]; fieldType {
+		fieldType := message[i]
+		logrus.Infof("FieldType received: %d", fieldType)
+		switch fieldType {
 		case byte(METRICID):
 			logrus.Infof("About to parse MetricId field")
 			metricId, newIndex, err := parseMetricId(message[i+1:], i+1)
@@ -60,7 +61,6 @@ func buildMetricMessage(message []byte) (events.MetricEvent, error) {
 			}
 			metricEvent.MetricId = metricId
 			i = newIndex
-			fieldsReceived[FieldType(fieldType)] = true
 		case byte(VALUE):
 			logrus.Infof("About to parse value field")
 			value, newIndex, err := parseValue(message[i+1:], i+1)
@@ -70,11 +70,11 @@ func buildMetricMessage(message []byte) (events.MetricEvent, error) {
 			}
 			metricEvent.Value = value
 			i = newIndex
-			fieldsReceived[FieldType(fieldType)] = true
 		default:
 			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)
 			return events.MetricEvent{}, InvalidMessageFormatError{errorMsg: err}
 		}
+		fieldsReceived[FieldType(fieldType)] = true
 	}
 	areAllFieldsPresent := fieldsReceived[METRICID] && fieldsReceived[VALUE]
 	if !areAllFieldsPresent {
@@ -88,7 +88,9 @@ func buildQueryMessage(message []byte) (events.QueryEvent, error) {
 	query := events.QueryEvent{}
 	fieldsReceived := make(map[FieldType]bool)
 	for i := 0; i < len(message); {
-		switch fieldType := message[i]; fieldType {
+		fieldType := message[i]
+		logrus.Infof("FieldType received: %d", fieldType)
+		switch fieldType {
 		case byte(METRICID):
 			logrus.Infof("About to parse MetricId field")
 			metricId, newIndex, err := parseMetricId(message[i+1:], i+1)
@@ -130,6 +132,7 @@ func buildQueryMessage(message []byte) (events.QueryEvent, error) {
 			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)
 			return events.QueryEvent{}, InvalidMessageFormatError{errorMsg: err}
 		}
+		fieldsReceived[FieldType(fieldType)] = true
 	}
 	areAllFieldsPresent := fieldsReceived[METRICID] && fieldsReceived[AGGREGATION] && fieldsReceived[AGGREGATIONWINDOWSSECS]
 	if !areAllFieldsPresent {

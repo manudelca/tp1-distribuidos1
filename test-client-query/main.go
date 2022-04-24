@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/manudelca/tp1-distribuidos1/test-client-metric/common"
+	"github.com/manudelca/tp1-distribuidos1/test-client-query/common"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
