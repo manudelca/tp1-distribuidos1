@@ -39,11 +39,17 @@ func InitConfig() (*viper.Viper, error) {
 	if _, err := strconv.Atoi(v.GetString("couriers")); err != nil {
 		return nil, errors.Wrapf(err, "Could not parse couriers env var as int.")
 	}
-	if _, err := strconv.Atoi(v.GetString("metriceventsbacklog")); err != nil {
-		return nil, errors.Wrapf(err, "Could not parse metriceventsbacklog env var as int.")
+	if _, err := strconv.Atoi(v.GetString("metricEventsBacklog")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse metricEventsBacklog env var as int.")
 	}
-	if _, err := strconv.Atoi(v.GetString("queryeventsbacklog")); err != nil {
-		return nil, errors.Wrapf(err, "Could not parse queryeventsbacklog env var as int.")
+	if _, err := strconv.Atoi(v.GetString("queryEventsBacklog")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse queryEventsBacklog env var as int.")
+	}
+	if _, err := strconv.Atoi(v.GetString("metricEventsWorkers")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse metricEventsWorkers env var as int.")
+	}
+	if _, err := strconv.Atoi(v.GetString("queryEventsWorkers")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse queryEventsWorkers env var as int.")
 	}
 
 	return v, nil
@@ -69,8 +75,10 @@ func PrintConfig(v *viper.Viper) {
 	logrus.Infof("[MAIN] Couriers: %s", v.GetString("couriers"))
 	logrus.Infof("[MAIN] Port: %s", v.GetString("port"))
 	logrus.Infof("[MAIN] Log Level: %s", v.GetString("log.level"))
-	logrus.Infof("[MAIN] Metric events backlog: %s", v.GetString("metriceventsbacklog"))
-	logrus.Infof("[MAIN] Query events backlog: %s", v.GetString("queryeventsbacklog"))
+	logrus.Infof("[MAIN] Metric events backlog: %s", v.GetString("metricEventsBacklog"))
+	logrus.Infof("[MAIN] Query events backlog: %s", v.GetString("queryEventsBacklog"))
+	logrus.Infof("[MAIN] Metric events workers: %s", v.GetString("metricEventsWorkers"))
+	logrus.Infof("[MAIN] Query events workers: %s", v.GetString("queryEventsWorkers"))
 }
 
 func main() {
@@ -89,8 +97,10 @@ func main() {
 	serverConfig := common.ServerConfig{
 		Port:                v.GetString("port"),
 		Couriers:            v.GetInt("couriers"),
-		MetricEventsBacklog: v.GetInt("metriceventsbacklog"),
-		QueryEventsBacklog:  v.GetInt("queryeventsbacklog"),
+		MetricEventsBacklog: v.GetInt("metricEventsBacklog"),
+		QueryEventsBacklog:  v.GetInt("queryEventsBacklog"),
+		MetricEventsWorkers: v.GetInt("metricEventsWorkers"),
+		QueryEventsWorkers:  v.GetInt("queryEventsWorkers"),
 	}
 
 	server, err := common.NewServer(serverConfig)

@@ -14,6 +14,8 @@ type ServerConfig struct {
 	Couriers            int
 	MetricEventsBacklog int
 	QueryEventsBacklog  int
+	MetricEventsWorkers int
+	QueryEventsWorkers  int
 }
 
 type Server struct {
@@ -35,10 +37,16 @@ func NewServer(config ServerConfig) (*Server, error) {
 
 func (s *Server) Run() {
 	clientsToServe := make(chan net.Conn, s.config.Couriers)
-	metricEventsToAttend := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
-	queryEventsToAttend := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
+	metricEventsToServe := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
+	queryEventsToServe := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
 	for i := 0; i < s.config.Couriers; i++ {
-		go ServeClients(clientsToServe, metricEventsToAttend, queryEventsToAttend)
+		go ServeClients(clientsToServe, metricEventsToServe, queryEventsToServe)
+	}
+	for i := 0; i < s.config.MetricEventsWorkers; i++ {
+		go ServeMetricEvents(metricEventsToServe)
+	}
+	for i := 0; i < s.config.QueryEventsWorkers; i++ {
+		go ServeQueryEvents(queryEventsToServe)
 	}
 	for true {
 		client_conn, err := s.acceptNewConnection()

@@ -10,6 +10,8 @@ services:
       - PORT=12345
       - METRICEVENTSBACKLOG=5
       - QUERYEVENTSBACKLOG=5
+      - METRICEVENTSWORKER=5
+      - QUERYEVENTSWORKER=5
     networks:
     - testing_net
 

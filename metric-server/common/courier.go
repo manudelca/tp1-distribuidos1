@@ -13,8 +13,8 @@ func HandleClientConnection(clientConn net.Conn, metricEventsQueue chan events.M
 	if err != nil {
 		logrus.Fatalf("[COURIER] Error trying to getEventFromMessage. Error: %s", err)
 	}
-	logrus.Infof("[COURIER] Event type %d succesfully processed", event.GetType())
-	logrus.Infof("[COURIER] Event processed: ", event)
+	logrus.Infof("[COURIER] Event type %d succesfully parsed", event.GetType())
+	logrus.Infof("[COURIER] Event parsed: ", event)
 	if metricEvent, ok := event.(events.MetricEvent); ok {
 		metricEventsQueue <- metricEvent
 	} else if queryEvent, ok := event.(events.QueryEvent); ok {
