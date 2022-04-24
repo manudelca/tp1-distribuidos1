@@ -22,12 +22,6 @@ func HandleClientConnection(clientConn net.Conn, metricEventsQueue chan events.M
 	} else {
 		logrus.Fatalf("[COURIER] Event type assertion failed")
 	}
-	// switch event.GetType() {
-	// case events.METRIC:
-	// 	metricEventsQueue <- events.MetricEvent.(event)
-	// case events.QUERY:
-	// 	queryEventsQueue <- events.QueryEvent(event)
-	// }
 	clientConn.Close()
 }
 
