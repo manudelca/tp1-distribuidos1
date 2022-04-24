@@ -2,3 +2,5 @@ couriers: 5
 port: 12345
 log:
   level: "info"
+metriceventsbacklog: 10
+queryeventsbacklog: 10

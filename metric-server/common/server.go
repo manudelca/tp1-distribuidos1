@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 type ServerConfig struct {
-	Port     string
-	Couriers int
+	Port                string
+	Couriers            int
+	MetricEventsBacklog int
+	QueryEventsBacklog  int
 }
 
 type Server struct {
@@ -32,8 +35,10 @@ func NewServer(config ServerConfig) (*Server, error) {
 
 func (s *Server) Run() {
 	clientsToServe := make(chan net.Conn, s.config.Couriers)
+	metricEventsToAttend := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
+	queryEventsToAttend := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
 	for i := 0; i < s.config.Couriers; i++ {
-		go ServeClients(clientsToServe)
+		go ServeClients(clientsToServe, metricEventsToAttend, queryEventsToAttend)
 	}
 	for true {
 		client_conn, err := s.acceptNewConnection()

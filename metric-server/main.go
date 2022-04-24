@@ -37,7 +37,13 @@ func InitConfig() (*viper.Viper, error) {
 
 	// Parse int variables and return an error if they cannot be parsed
 	if _, err := strconv.Atoi(v.GetString("couriers")); err != nil {
-		return nil, errors.Wrapf(err, "Could not parse SERVER_LISTENBACKLOG env var as int.")
+		return nil, errors.Wrapf(err, "Could not parse couriers env var as int.")
+	}
+	if _, err := strconv.Atoi(v.GetString("metriceventsbacklog")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse metriceventsbacklog env var as int.")
+	}
+	if _, err := strconv.Atoi(v.GetString("queryeventsbacklog")); err != nil {
+		return nil, errors.Wrapf(err, "Could not parse queryeventsbacklog env var as int.")
 	}
 
 	return v, nil
@@ -63,6 +69,8 @@ func PrintConfig(v *viper.Viper) {
 	logrus.Infof("[MAIN] Couriers: %s", v.GetString("couriers"))
 	logrus.Infof("[MAIN] Port: %s", v.GetString("port"))
 	logrus.Infof("[MAIN] Log Level: %s", v.GetString("log.level"))
+	logrus.Infof("[MAIN] Metric events backlog: %s", v.GetString("metriceventsbacklog"))
+	logrus.Infof("[MAIN] Query events backlog: %s", v.GetString("queryeventsbacklog"))
 }
 
 func main() {
@@ -79,8 +87,10 @@ func main() {
 	PrintConfig(v)
 
 	serverConfig := common.ServerConfig{
-		Port:     v.GetString("port"),
-		Couriers: v.GetInt("Couriers"),
+		Port:                v.GetString("port"),
+		Couriers:            v.GetInt("couriers"),
+		MetricEventsBacklog: v.GetInt("metriceventsbacklog"),
+		QueryEventsBacklog:  v.GetInt("queryeventsbacklog"),
 	}
 
 	server, err := common.NewServer(serverConfig)

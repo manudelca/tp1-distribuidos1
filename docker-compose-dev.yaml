@@ -8,6 +8,8 @@ services:
       - COURIERS=7
       - LOG_LEVEL=DEBUG
       - PORT=12345
+      - METRICEVENTSBACKLOG=5
+      - QUERYEVENTSBACKLOG=5
     networks:
     - testing_net
 
