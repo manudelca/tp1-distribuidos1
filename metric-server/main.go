@@ -59,10 +59,10 @@ func InitLogger(logLevel string) error {
 // PrintConfig Print all the configuration parameters of the program.
 // For debugging purposes only
 func PrintConfig(v *viper.Viper) {
-	logrus.Infof("Metric-server configuration")
-	logrus.Infof("Couriers: %s", v.GetString("couriers"))
-	logrus.Infof("Port: %s", v.GetString("port"))
-	logrus.Infof("Log Level: %s", v.GetString("log.level"))
+	logrus.Infof("[MAIN] Metric-server configuration")
+	logrus.Infof("[MAIN] Couriers: %s", v.GetString("couriers"))
+	logrus.Infof("[MAIN] Port: %s", v.GetString("port"))
+	logrus.Infof("[MAIN] Log Level: %s", v.GetString("log.level"))
 }
 
 func main() {
@@ -85,7 +85,7 @@ func main() {
 
 	server, err := common.NewServer(serverConfig)
 	if err != nil {
-		logrus.Fatalf("[SERVER] Could not create Server. Error %s", err)
+		logrus.Fatalf("[MAIN] Could not create Server. Error %s", err)
 		return
 	}
 	server.Run()

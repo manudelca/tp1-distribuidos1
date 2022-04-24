@@ -10,10 +10,10 @@ import (
 func HandleClientConnection(clientConn net.Conn) {
 	event, err := protocol.GetEventFromMessage(clientConn)
 	if err != nil {
-		logrus.Fatalf("[SERVER] Error trying to getEventFromMessage. Error: %s", err)
+		logrus.Fatalf("[COURIER] Error trying to getEventFromMessage. Error: %s", err)
 	}
-	logrus.Infof("Event type %d succesfully processed", event.GetType())
-	logrus.Infof("Event processed: ", event)
+	logrus.Infof("[COURIER] Event type %d succesfully processed", event.GetType())
+	logrus.Infof("[COURIER] Event processed: ", event)
 	// switch event.GetType() {
 	// case events.METRIC:
 	// case events.QUERY:

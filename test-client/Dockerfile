@@ -11,10 +11,9 @@ RUN mkdir -p /build
 WORKDIR /build/
 COPY . .
 # CGO_ENABLED must be disabled to run go binary in Alpine
-RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o bin/test-client-query github.com/manudelca/tp1-distribuidos1/test-client-query
+RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o bin/test-client github.com/manudelca/tp1-distribuidos1/test-client
 
 
 FROM busybox:latest
-COPY --from=builder /build/bin/test-client-query /test-client-query
-COPY ./test-client-query/config.yaml /config.yaml
+COPY --from=builder /build/bin/test-client /test-client
 ENTRYPOINT ["/bin/sh"]

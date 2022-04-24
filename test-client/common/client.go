@@ -18,6 +18,7 @@ type ClientConfig struct {
 	ServerAddress string
 	LoopLapse     time.Duration
 	LoopPeriod    time.Duration
+	ClientType    string
 }
 
 // Client Entity that encapsulates how
@@ -68,7 +69,15 @@ loop:
 		}
 
 		// Send
-		c.sendQuery(msgID)
+		if c.config.ClientType == "METRIC" {
+			c.sendMetric(msgID)
+		} else if c.config.ClientType == "QUERY" {
+			c.sendQuery(msgID)
+		} else {
+			logrus.Infof("Unrecognized clientType: %s", c.config.ClientType)
+			c.conn.Close()
+			return
+		}
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
 		msgID++
 
@@ -93,6 +102,35 @@ loop:
 
 	log.Infof("[CLIENT %v] Closing connection", c.config.ID)
 	c.conn.Close()
+}
+
+func (c *Client) sendMetric(msgID int) {
+	logrus.Infof("About to send Metric event")
+	metric := fmt.Sprintf("metric_%d", msgID)
+	metricBytes := []byte(metric)
+	metricLen := uint8(len(metric))
+	metricFieldType := uint8(0)
+	value := float32(1.2)
+	var valueBytes [4]byte
+	binary.BigEndian.PutUint32(valueBytes[:], math.Float32bits(value))
+	valueFieldType := uint8(1)
+	eventType := uint8(0)
+	msgLen := uint16(1 + 1 + 1 + len(metricBytes) + 1 + 4)
+	logrus.Infof("MsgLen: %s", msgLen)
+	var msgLenBytes [2]byte
+	binary.BigEndian.PutUint16(msgLenBytes[:], msgLen)
+
+	var bytes []byte
+	bytes = append(bytes, msgLenBytes[:]...)
+	bytes = append(bytes, eventType)
+	bytes = append(bytes, metricFieldType)
+	bytes = append(bytes, metricLen)
+	bytes = append(bytes, metricBytes[:]...)
+	bytes = append(bytes, valueFieldType)
+	bytes = append(bytes, valueBytes[:]...)
+	logrus.Infof("Bytes to be sent", bytes)
+	logrus.Infof("Finished")
+	c.conn.Write(bytes)
 }
 
 func (c *Client) sendQuery(msgID int) {

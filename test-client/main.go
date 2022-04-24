@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/manudelca/tp1-distribuidos1/test-client-query/common"
+	"github.com/manudelca/tp1-distribuidos1/test-client/common"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -25,8 +25,8 @@ func InitConfig() (*viper.Viper, error) {
 	v.BindEnv("loop", "period")
 	v.BindEnv("loop", "lapse")
 	v.BindEnv("log", "level")
+	v.BindEnv("type")
 
-	v.SetConfigFile("./config.yaml")
 	if err := v.ReadInConfig(); err != nil {
 		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
 	}
@@ -59,6 +59,7 @@ func PrintConfig(v *viper.Viper) {
 	logrus.Infof("Loop Lapse: %v", v.GetDuration("loop.lapse"))
 	logrus.Infof("Loop Period: %v", v.GetDuration("loop.period"))
 	logrus.Infof("Log Level: %s", v.GetString("log.level"))
+	logrus.Info("Client type: %s", v.GetString("type"))
 }
 
 func main() {
@@ -79,6 +80,7 @@ func main() {
 		ID:            v.GetString("id"),
 		LoopLapse:     v.GetDuration("loop.lapse"),
 		LoopPeriod:    v.GetDuration("loop.period"),
+		ClientType:    v.GetString("type"),
 	}
 
 	client := common.NewClient(clientConfig)

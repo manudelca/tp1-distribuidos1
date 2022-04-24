@@ -3,8 +3,7 @@ PWD := $(shell pwd)
 
 docker-image:
 	docker build -f ./metric-server/Dockerfile -t "metric-server:latest" .
-	docker build -f ./test-client-metric/Dockerfile -t "test-client-metric:latest" .
-	docker build -f ./test-client-query/Dockerfile -t "test-client-query:latest" .
+	docker build -f ./test-client/Dockerfile -t "test-client:latest" .
 	# Execute this command from time to time to clean up intermediate stages generated 
 	# during client build (your hard drive will like this :) ). Don't left uncommented if you 
 	# want to avoid rebuilding client image every time the docker-compose-up command 
