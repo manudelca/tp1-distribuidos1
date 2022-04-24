@@ -9,8 +9,8 @@ import (
 )
 
 type ServerConfig struct {
-	Port    string
-	Workers int
+	Port     string
+	Couriers int
 }
 
 type Server struct {
@@ -31,8 +31,8 @@ func NewServer(config ServerConfig) (*Server, error) {
 }
 
 func (s *Server) Run() {
-	clientsToServe := make(chan net.Conn, s.config.Workers)
-	for i := 0; i < s.config.Workers; i++ {
+	clientsToServe := make(chan net.Conn, s.config.Couriers)
+	for i := 0; i < s.config.Couriers; i++ {
 		go ServeClients(clientsToServe)
 	}
 	for true {

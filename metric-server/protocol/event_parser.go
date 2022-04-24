@@ -6,7 +6,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/manudelca/tp1-distribuidos1/metric-server/common"
+	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/manudelca/tp1-distribuidos1/metric-server/util"
 	"github.com/pkg/errors"
 )
@@ -24,7 +24,7 @@ func getLen(clientConn net.Conn) (uint16, error) {
 	return len, nil
 }
 
-func GetMessage(clientConn net.Conn) (common.Event, error) {
+func GetEventFromMessage(clientConn net.Conn) (events.Event, error) {
 	len, err := getLen(clientConn)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to get length of message")
@@ -34,24 +34,24 @@ func GetMessage(clientConn net.Conn) (common.Event, error) {
 		return nil, errors.Wrapf(err, "Failed to read message")
 	}
 	switch eventType := bytes[0]; eventType {
-	case byte(common.METRIC):
+	case byte(events.METRIC):
 		return buildMetricMessage(bytes[1:])
-	case byte(common.QUERY):
+	case byte(events.QUERY):
 		return buildQueryMessage(bytes[1:])
 	default:
 		return nil, InvalidEventTypeError{eventType: uint8(eventType)}
 	}
 }
 
-func buildMetricMessage(message []byte) (common.MetricEvent, error) {
-	metricEvent := common.MetricEvent{}
+func buildMetricMessage(message []byte) (events.MetricEvent, error) {
+	metricEvent := events.MetricEvent{}
 	fieldsReceived := make(map[FieldType]bool)
 	for i := 0; i < len(message); {
 		switch fieldType := message[i]; fieldType {
 		case byte(METRICID):
 			metricId, newIndex, err := parseMetricId(message[i:], i)
 			if err != nil {
-				return common.MetricEvent{}, errors.Wrapf(err, "Could not parse MetricId when trying to build MetricEvent from message received")
+				return events.MetricEvent{}, errors.Wrapf(err, "Could not parse MetricId when trying to build MetricEvent from message received")
 			}
 			metricEvent.MetricId = metricId
 			i = newIndex
@@ -59,65 +59,65 @@ func buildMetricMessage(message []byte) (common.MetricEvent, error) {
 		case byte(VALUE):
 			value, newIndex, err := parseValue(message[i:], i)
 			if err != nil {
-				return common.MetricEvent{}, errors.Wrapf(err, "Could not parse Value when trying to build MetricEvent from message received")
+				return events.MetricEvent{}, errors.Wrapf(err, "Could not parse Value when trying to build MetricEvent from message received")
 			}
 			metricEvent.Value = value
 			i = newIndex
 			fieldsReceived[FieldType(fieldType)] = true
 		default:
 			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)
-			return common.MetricEvent{}, InvalidMessageFormatError{errorMsg: err}
+			return events.MetricEvent{}, InvalidMessageFormatError{errorMsg: err}
 		}
 	}
 	areAllFieldsPresent := fieldsReceived[METRICID] && fieldsReceived[VALUE]
 	if !areAllFieldsPresent {
-		return common.MetricEvent{}, InvalidMessageFormatError{errorMsg: "Missing required fields. MetricID and Value are needed"}
+		return events.MetricEvent{}, InvalidMessageFormatError{errorMsg: "Missing required fields. MetricID and Value are needed"}
 	}
 	return metricEvent, nil
 }
 
-func buildQueryMessage(message []byte) (common.QueryEvent, error) {
-	query := common.QueryEvent{}
+func buildQueryMessage(message []byte) (events.QueryEvent, error) {
+	query := events.QueryEvent{}
 	fieldsReceived := make(map[FieldType]bool)
 	for i := 0; i < len(message); {
 		switch fieldType := message[i]; fieldType {
 		case byte(METRICID):
 			metricId, newIndex, err := parseMetricId(message[i:], i)
 			if err != nil {
-				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse MetricId when trying to build QueryMessage from message received")
+				return events.QueryEvent{}, errors.Wrapf(err, "Could not parse MetricId when trying to build QueryMessage from message received")
 			}
 			query.MetricId = metricId
 			i = newIndex
 		case byte(AGGREGATION):
 			aggregation, newIndex, err := parseAggregation(message[i:], i)
 			if err != nil {
-				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse Aggregation when trying to build QueryMessage from message received")
+				return events.QueryEvent{}, errors.Wrapf(err, "Could not parse Aggregation when trying to build QueryMessage from message received")
 			}
 			query.Aggregation = aggregation
 			i = newIndex
 		case byte(AGGREGATIONWINDOWSSECS):
 			aggregationWindowsSecs, newIndex, err := parseAggregationWindowsSecs(message[i:], i)
 			if err != nil {
-				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse AggregationWindowsSecs when trying to build QueryMessage from message received")
+				return events.QueryEvent{}, errors.Wrapf(err, "Could not parse AggregationWindowsSecs when trying to build QueryMessage from message received")
 			}
 			query.AggregationWindowsSecs = aggregationWindowsSecs
 			i = newIndex
 		case byte(DATEINTERVAL):
 			from, to, newIndex, err := parseDateInterval(message[i:], i)
 			if err != nil {
-				return common.QueryEvent{}, errors.Wrapf(err, "Could not parse Date interval when trying to build QueryMessage from message received")
+				return events.QueryEvent{}, errors.Wrapf(err, "Could not parse Date interval when trying to build QueryMessage from message received")
 			}
 			query.From = from
 			query.To = to
 			i = newIndex
 		default:
 			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)
-			return common.QueryEvent{}, InvalidMessageFormatError{errorMsg: err}
+			return events.QueryEvent{}, InvalidMessageFormatError{errorMsg: err}
 		}
 	}
 	areAllFieldsPresent := fieldsReceived[METRICID] && fieldsReceived[AGGREGATION] && fieldsReceived[AGGREGATIONWINDOWSSECS]
 	if !areAllFieldsPresent {
-		return common.QueryEvent{}, InvalidMessageFormatError{errorMsg: "Missing required fields. MetricID, Aggregation, AggregationWindowsSecs are needed"}
+		return events.QueryEvent{}, InvalidMessageFormatError{errorMsg: "Missing required fields. MetricID, Aggregation, AggregationWindowsSecs are needed"}
 	}
 	return query, nil
 }

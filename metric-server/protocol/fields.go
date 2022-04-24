@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/manudelca/tp1-distribuidos1/metric-server/common"
+	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/pkg/errors"
 )
 
@@ -67,12 +67,12 @@ func parseValue(message []byte, i int) (float32, int, error) {
 	return value, i, nil
 }
 
-func parseAggregation(message []byte, i int) (common.AggregationType, int, error) {
+func parseAggregation(message []byte, i int) (events.AggregationType, int, error) {
 	if len(message) < 1 {
 		errorMsg := fmt.Sprintf("The message is shorter than 1 bytes")
 		return 0, i, InvalidAggregationFieldError{errorMsg: errorMsg}
 	}
-	aggregation := common.AggregationType(message[0])
+	aggregation := events.AggregationType(message[0])
 	return aggregation, i + 1, nil
 }
 

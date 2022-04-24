@@ -23,7 +23,7 @@ func InitConfig() (*viper.Viper, error) {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// Add env variables supported
-	v.BindEnv("workers")
+	v.BindEnv("couriers")
 	v.BindEnv("log", "level")
 
 	// Try to read configuration from config file. If config file
@@ -36,7 +36,7 @@ func InitConfig() (*viper.Viper, error) {
 	}
 
 	// Parse int variables and return an error if they cannot be parsed
-	if _, err := strconv.Atoi(v.GetString("workers")); err != nil {
+	if _, err := strconv.Atoi(v.GetString("couriers")); err != nil {
 		return nil, errors.Wrapf(err, "Could not parse SERVER_LISTENBACKLOG env var as int.")
 	}
 
@@ -60,7 +60,7 @@ func InitLogger(logLevel string) error {
 // For debugging purposes only
 func PrintConfig(v *viper.Viper) {
 	logrus.Infof("Metric-server configuration")
-	logrus.Infof("Workers: %s", v.GetString("workers"))
+	logrus.Infof("Couriers: %s", v.GetString("couriers"))
 	logrus.Infof("Port: %s", v.GetString("port"))
 	logrus.Infof("Log Level: %s", v.GetString("log.level"))
 }
@@ -79,8 +79,8 @@ func main() {
 	PrintConfig(v)
 
 	serverConfig := common.ServerConfig{
-		Port:    v.GetString("port"),
-		Workers: v.GetInt("Workers"),
+		Port:     v.GetString("port"),
+		Couriers: v.GetInt("Couriers"),
 	}
 
 	server, err := common.NewServer(serverConfig)
