@@ -39,19 +39,21 @@ func NewServer(config ServerConfig) (*Server, error) {
 func (s *Server) Run() {
 	clientsToServe := make(chan net.Conn, s.config.Couriers)
 	metricEventsToServe := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
-	queryEventsToServe := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
+	queryEventsToServePool := make([]chan events.QueryEvent, s.config.QueryEventsWorkers)
 	fileMonitor := file_monitor.NewFileMonitor()
-	for i := 0; i < s.config.Couriers; i++ {
-		courier := NewCourier(metricEventsToServe, queryEventsToServe)
-		go courier.ServeClients(clientsToServe)
-	}
 	for i := 0; i < s.config.MetricEventsWorkers; i++ {
 		metricEventsWorker := NewMetricEventsWorker(metricEventsToServe, fileMonitor)
 		go metricEventsWorker.ServeMetricEvents()
 	}
 	for i := 0; i < s.config.QueryEventsWorkers; i++ {
+		queryEventsToServe := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
+		queryEventsToServePool[i] = queryEventsToServe
 		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, fileMonitor)
 		go queryEventsWorker.ServeQueryEvents()
+	}
+	for i := 0; i < s.config.Couriers; i++ {
+		courier := NewCourier(metricEventsToServe, queryEventsToServePool)
+		go courier.ServeClients(clientsToServe)
 	}
 	for true {
 		client_conn, err := s.acceptNewConnection()

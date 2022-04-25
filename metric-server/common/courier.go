@@ -2,6 +2,7 @@ package common
 
 import (
 	"net"
+	"reflect"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/manudelca/tp1-distribuidos1/metric-server/protocol"
@@ -10,13 +11,13 @@ import (
 
 type Courier struct {
 	metricEventsQueue chan events.MetricEvent
-	queryEventsQueue  chan events.QueryEvent
+	queryEventsPool   []chan events.QueryEvent
 }
 
-func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsQueue chan events.QueryEvent) *Courier {
+func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.QueryEvent) *Courier {
 	courier := Courier{
 		metricEventsQueue: metricEventsQueue,
-		queryEventsQueue:  queryEventsQueue,
+		queryEventsPool:   queryEventsPool,
 	}
 	return &courier
 }
@@ -47,12 +48,14 @@ func (c *Courier) handleClientConnection(clientConn net.Conn) {
 }
 
 func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn net.Conn) {
-	if cap(c.metricEventsQueue) == len(c.metricEventsQueue) {
+	select {
+	case c.metricEventsQueue <- metricEvent:
+	default:
 		logrus.Infof("[COURIER] MetricEventsQueue full. Rejecting client")
 		c.rejectClient(clientConn)
 		return
 	}
-	logrus.Infof("[COURIER] Storing metric event in queue: ", metricEvent)
+	logrus.Infof("[COURIER] Stored metric event in queue: ", metricEvent)
 	c.metricEventsQueue <- metricEvent
 	err := protocol.SendSuccess("Metric succesfully received", clientConn)
 	if err != nil {
@@ -61,13 +64,19 @@ func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn n
 }
 
 func (c *Courier) answerQueryEvent(queryEvent events.QueryEvent, clientConn net.Conn) {
-	if cap(c.queryEventsQueue) == len(c.queryEventsQueue) {
+	cases := make([]reflect.SelectCase, len(c.queryEventsPool)+1)
+	for i, query := range c.queryEventsPool {
+		cases[i] = reflect.SelectCase{Dir: reflect.SelectSend, Chan: reflect.ValueOf(query), Send: reflect.ValueOf(queryEvent)}
+	}
+	defualtCaseIndex := len(c.queryEventsPool)
+	cases[defualtCaseIndex] = reflect.SelectCase{Dir: reflect.SelectDefault, Chan: reflect.Value{}, Send: reflect.Value{}}
+	chosen, _, _ := reflect.Select(cases)
+	if chosen == defualtCaseIndex {
 		logrus.Infof("[COURIER] QueryEventsQueue full. Rejecting client")
 		c.rejectClient(clientConn)
 		return
 	}
-	logrus.Infof("[COURIER] Storing query event in queue: ", queryEvent)
-	c.queryEventsQueue <- queryEvent
+	logrus.Infof("[COURIER] Stored query event in queue %d: ", chosen, queryEvent)
 }
 
 func (c *Courier) rejectClient(clientConn net.Conn) {
