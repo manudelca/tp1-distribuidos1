@@ -8,13 +8,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func ServeClients(clientsToServe chan net.Conn, metricEventsQueue chan events.MetricEvent, queryEventsQueue chan events.QueryEvent) {
+type Courier struct {
+	metricEventsQueue chan events.MetricEvent
+	queryEventsQueue  chan events.QueryEvent
+}
+
+func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsQueue chan events.QueryEvent) *Courier {
+	courier := Courier{
+		metricEventsQueue: metricEventsQueue,
+		queryEventsQueue:  queryEventsQueue,
+	}
+	return &courier
+}
+
+func (c *Courier) ServeClients(clientsToServe chan net.Conn) {
 	for clientConn := range clientsToServe {
-		handleClientConnection(clientConn, metricEventsQueue, queryEventsQueue)
+		c.handleClientConnection(clientConn)
 	}
 }
 
-func handleClientConnection(clientConn net.Conn, metricEventsQueue chan events.MetricEvent, queryEventsQueue chan events.QueryEvent) {
+func (c *Courier) handleClientConnection(clientConn net.Conn) {
 	event, err := protocol.GetEventFromMessage(clientConn)
 	if err != nil {
 		logrus.Fatalf("[COURIER] Error trying to getEventFromMessage. Error: %s", err)
@@ -22,9 +35,9 @@ func handleClientConnection(clientConn net.Conn, metricEventsQueue chan events.M
 	logrus.Infof("[COURIER] Event type %d succesfully parsed", event.GetType())
 	logrus.Infof("[COURIER] Event parsed: ", event)
 	if metricEvent, ok := event.(events.MetricEvent); ok {
-		answerMetricEvent(metricEvent, clientConn, metricEventsQueue)
+		c.answerMetricEvent(metricEvent, clientConn)
 	} else if queryEvent, ok := event.(events.QueryEvent); ok {
-		answerQueryEvent(queryEvent, clientConn, queryEventsQueue)
+		c.answerQueryEvent(queryEvent, clientConn)
 	} else {
 		logrus.Fatalf("[COURIER] Event type assertion failed")
 	}
@@ -32,31 +45,31 @@ func handleClientConnection(clientConn net.Conn, metricEventsQueue chan events.M
 	clientConn.Close()
 }
 
-func answerMetricEvent(metricEvent events.MetricEvent, clientConn net.Conn, metricEventsQueue chan events.MetricEvent) {
-	if cap(metricEventsQueue) == len(metricEventsQueue) {
+func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn net.Conn) {
+	if cap(c.metricEventsQueue) == len(c.metricEventsQueue) {
 		logrus.Infof("[COURIER] MetricEventsQueue full. Rejecting client")
-		RejectClient(clientConn)
+		c.rejectClient(clientConn)
 		return
 	}
 	logrus.Infof("[COURIER] Storing metric event in queue: ", metricEvent)
-	metricEventsQueue <- metricEvent
+	c.metricEventsQueue <- metricEvent
 	err := protocol.SendSuccess("Metric succesfully received", clientConn)
 	if err != nil {
 		logrus.Fatalf("[COURIER] An error ocurred while trying to answer client metric. Error: ", err)
 	}
 }
 
-func answerQueryEvent(queryEvent events.QueryEvent, clientConn net.Conn, queryEventsQueue chan events.QueryEvent) {
-	if cap(queryEventsQueue) == len(queryEventsQueue) {
+func (c *Courier) answerQueryEvent(queryEvent events.QueryEvent, clientConn net.Conn) {
+	if cap(c.queryEventsQueue) == len(c.queryEventsQueue) {
 		logrus.Infof("[COURIER] QueryEventsQueue full. Rejecting client")
-		RejectClient(clientConn)
+		c.rejectClient(clientConn)
 		return
 	}
 	logrus.Infof("[COURIER] Storing query event in queue: ", queryEvent)
-	queryEventsQueue <- queryEvent
+	c.queryEventsQueue <- queryEvent
 }
 
-func RejectClient(clientConn net.Conn) {
+func (c *Courier) rejectClient(clientConn net.Conn) {
 	err := protocol.SendServerError("Server not available. Try again later", clientConn)
 	if err != nil {
 		logrus.Fatalf("[COURIER] An error ocurred while trying to reject client. Error: ", err)

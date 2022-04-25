@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
+	"github.com/manudelca/tp1-distribuidos1/metric-server/file_monitor"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -39,14 +40,18 @@ func (s *Server) Run() {
 	clientsToServe := make(chan net.Conn, s.config.Couriers)
 	metricEventsToServe := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
 	queryEventsToServe := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
+	fileMonitor := file_monitor.FileMonitor{}
 	for i := 0; i < s.config.Couriers; i++ {
-		go ServeClients(clientsToServe, metricEventsToServe, queryEventsToServe)
+		courier := NewCourier(metricEventsToServe, queryEventsToServe)
+		go courier.ServeClients(clientsToServe)
 	}
 	for i := 0; i < s.config.MetricEventsWorkers; i++ {
-		go ServeMetricEvents(metricEventsToServe)
+		metricEventsWorker := NewMetricEventsWorker(metricEventsToServe, &fileMonitor)
+		go metricEventsWorker.ServeMetricEvents()
 	}
 	for i := 0; i < s.config.QueryEventsWorkers; i++ {
-		go ServeQueryEvents(queryEventsToServe)
+		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, &fileMonitor)
+		go queryEventsWorker.ServeQueryEvents()
 	}
 	for true {
 		client_conn, err := s.acceptNewConnection()
