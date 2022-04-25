@@ -7,6 +7,13 @@ type MapStringToMutex struct {
 	mapMutex      sync.RWMutex
 }
 
+func NewMapStringToMutex() *MapStringToMutex {
+	return &MapStringToMutex{
+		stringToMutex: make(map[string]*sync.Mutex),
+		mapMutex:      sync.RWMutex{},
+	}
+}
+
 func (m *MapStringToMutex) Add(key string, mut *sync.Mutex) *sync.Mutex {
 	m.mapMutex.Lock()
 	savedMutex, ok := m.stringToMutex[key]

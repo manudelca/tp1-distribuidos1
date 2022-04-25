@@ -14,7 +14,7 @@ type FileMonitor struct {
 
 func NewFileMonitor() *FileMonitor {
 	return &FileMonitor{
-		mapStringToMutex: &util.MapStringToMutex{},
+		mapStringToMutex: util.NewMapStringToMutex(),
 	}
 }
 

@@ -28,10 +28,10 @@ func (m *MetricEventsWorker) ServeMetricEvents() {
 		year, month, day := metricEvent.Date.Date()
 		hours, minutes, _ := metricEvent.Date.Clock()
 		fileToWrite := fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricEvent.MetricId, year, month, day, hours, minutes)
-		logrus.Infof("[METRIC EVENTS WORKER] Metric to write: \"%s\" On file: \"%s\"", metricToWrite, fileToWrite)
 		err := m.fileMonitor.WriteLineOnFile(metricToWrite, fileToWrite)
 		if err != nil {
-			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\". Error %s", metricToWrite, err)
+			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\" On file: \"%s\". Error %s", metricToWrite, fileToWrite, err)
 		}
+		logrus.Infof("[METRIC EVENTS WORKER] Metric to write: \"%s\" On file: \"%s\"", metricToWrite, fileToWrite)
 	}
 }

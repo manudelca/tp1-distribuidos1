@@ -40,17 +40,17 @@ func (s *Server) Run() {
 	clientsToServe := make(chan net.Conn, s.config.Couriers)
 	metricEventsToServe := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
 	queryEventsToServe := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
-	fileMonitor := file_monitor.FileMonitor{}
+	fileMonitor := file_monitor.NewFileMonitor()
 	for i := 0; i < s.config.Couriers; i++ {
 		courier := NewCourier(metricEventsToServe, queryEventsToServe)
 		go courier.ServeClients(clientsToServe)
 	}
 	for i := 0; i < s.config.MetricEventsWorkers; i++ {
-		metricEventsWorker := NewMetricEventsWorker(metricEventsToServe, &fileMonitor)
+		metricEventsWorker := NewMetricEventsWorker(metricEventsToServe, fileMonitor)
 		go metricEventsWorker.ServeMetricEvents()
 	}
 	for i := 0; i < s.config.QueryEventsWorkers; i++ {
-		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, &fileMonitor)
+		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, fileMonitor)
 		go queryEventsWorker.ServeQueryEvents()
 	}
 	for true {
