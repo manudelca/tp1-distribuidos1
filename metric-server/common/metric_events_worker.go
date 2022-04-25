@@ -32,6 +32,6 @@ func (m *MetricEventsWorker) ServeMetricEvents() {
 		if err != nil {
 			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\" On file: \"%s\". Error %s", metricToWrite, fileToWrite, err)
 		}
-		logrus.Infof("[METRIC EVENTS WORKER] Metric to write: \"%s\" On file: \"%s\"", metricToWrite, fileToWrite)
+		logrus.Infof("[METRIC EVENTS WORKER] Metric successfully written: \"%s\" On file: \"%s\"", metricToWrite, fileToWrite)
 	}
 }
