@@ -1,7 +1,6 @@
 package file_monitor
 
 import (
-	"errors"
 	"os"
 	"sync"
 
@@ -29,13 +28,9 @@ func (f *FileMonitor) WriteLineOnFile(line string, fileName string) error {
 		fileMutex = f.mapStringToMutex.Add(fileName, &mut)
 	}
 	fileMutex.Lock()
-	file, err := os.Open(fileName)
-	if errors.Is(err, os.ErrNotExist) {
-		file, err = os.Create(fileName)
-		if err != nil {
-			fileMutex.Unlock()
-			return err
-		}
+	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
 	}
 	for i := 0; i < len(line); {
 		written, err := file.WriteString(line[i:])
@@ -45,7 +40,7 @@ func (f *FileMonitor) WriteLineOnFile(line string, fileName string) error {
 		}
 		i = i + written
 	}
-
+	file.Close()
 	fileMutex.Unlock()
 	return nil
 }

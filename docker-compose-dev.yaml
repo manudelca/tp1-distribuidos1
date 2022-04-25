@@ -47,6 +47,38 @@ services:
     depends_on:
       - metric-server
 
+  test-client3:
+    container_name: test-client3
+    image: test-client:latest
+    entrypoint: /test-client
+    environment:
+      - CLI_ID=3
+      - CLI_SERVER_ADDRESS=metric-server:12345
+      - CLI_LOOP_LAPSE=1m2s
+      - CLI_LOOP_PERIOD=5s
+      - CLI_LOG_LEVEL=DEBUG
+      - CLI_TYPE=METRIC
+    networks:
+      - testing_net
+    depends_on:
+      - metric-server
+
+  test-client4:
+    container_name: test-client4
+    image: test-client:latest
+    entrypoint: /test-client
+    environment:
+      - CLI_ID=4
+      - CLI_SERVER_ADDRESS=metric-server:12345
+      - CLI_LOOP_LAPSE=1m2s
+      - CLI_LOOP_PERIOD=5s
+      - CLI_LOG_LEVEL=DEBUG
+      - CLI_TYPE=METRIC
+    networks:
+      - testing_net
+    depends_on:
+      - metric-server
+
 networks:
   testing_net:
     ipam:
