@@ -56,7 +56,7 @@ func (s *Server) Run() {
 	for true {
 		client_conn, err := s.acceptNewConnection()
 		if err != nil {
-			logrus.Fatalf("[SERVER] Could not accept new connection. Error: %s", err.Error())
+			logrus.Infof("[SERVER] Could not accept new connection. Error: %s", err.Error())
 			continue
 		}
 		clientsToServe <- client_conn

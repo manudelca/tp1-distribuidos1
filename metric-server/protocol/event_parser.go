@@ -16,7 +16,7 @@ func getLen(clientConn net.Conn) (uint16, error) {
 	uint16Size := 2
 	bytes, err := util.ReadFromConnection(clientConn, uint16Size)
 	if err != nil {
-		logrus.Fatalf("[EVENT PARSER] Failed to get message len. Error: %s", err.Error())
+		logrus.Infof("[EVENT PARSER] Failed to get message len. Error: %s", err.Error())
 		return 0, errors.Wrapf(err, "Could not read message len from connection")
 	}
 	len := binary.BigEndian.Uint16(bytes)
