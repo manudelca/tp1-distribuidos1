@@ -29,8 +29,7 @@ func parseFloat(message []byte, i int) (float32, int, error) {
 	return value, i + 4, nil
 }
 
-func parseDate(message []byte, i int) (time.Time, int, error) {
-	layout := "2006-01-02 03:04:05"
+func parseDate(message []byte, i int, layout string) (time.Time, int, error) {
 	if len(message) < len(layout) {
 		errorMsg := fmt.Sprintf("The message is shorter than the layout proposed (YYYY-MM-DD HH:mm:ss)")
 		return time.Time{}, i, InvalidDateFieldError{errorMsg: errorMsg}
@@ -79,28 +78,13 @@ func parseAggregationWindowsSecs(message []byte, i int) (float32, int, error) {
 	return aggregationWindowsSecs, i, nil
 }
 
-func parseFrom(message []byte, i int) (time.Time, int, error) {
-	date, i, err := parseDate(message, i)
-	if err != nil {
-		return date, i, errors.Wrapf(err, "Could not parse From date")
-	}
-	return date, i, nil
-}
-
-func parseTo(message []byte, i int) (time.Time, int, error) {
-	date, i, err := parseDate(message, i)
-	if err != nil {
-		return date, i, errors.Wrapf(err, "Could not parse To date")
-	}
-	return date, i, nil
-}
-
 func parseDateInterval(message []byte, i int) (time.Time, time.Time, int, error) {
-	from, newIndex, err := parseDate(message, i)
+	layout := "2006-01-02 03:04:05"
+	from, newIndex, err := parseDate(message, i, layout)
 	if err != nil {
 		return from, from, i, errors.Wrapf(err, "Could not parse From date")
 	}
-	to, newIndex, err := parseDate(message, newIndex)
+	to, newIndex, err := parseDate(message[len(layout):], newIndex, layout)
 	if err != nil {
 		return from, to, i, errors.Wrapf(err, "Could not parse To date")
 	}
