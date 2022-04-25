@@ -24,6 +24,8 @@ func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsQueue chan
 func (c *Courier) ServeClients(clientsToServe chan net.Conn) {
 	for clientConn := range clientsToServe {
 		c.handleClientConnection(clientConn)
+		logrus.Infof("[COURIER] Closing client connection")
+		clientConn.Close()
 	}
 }
 
@@ -31,6 +33,7 @@ func (c *Courier) handleClientConnection(clientConn net.Conn) {
 	event, err := protocol.GetEventFromMessage(clientConn)
 	if err != nil {
 		logrus.Fatalf("[COURIER] Error trying to getEventFromMessage. Error: %s", err)
+		return
 	}
 	logrus.Infof("[COURIER] Event type %d succesfully parsed", event.GetType())
 	logrus.Infof("[COURIER] Event parsed: ", event)
@@ -41,8 +44,6 @@ func (c *Courier) handleClientConnection(clientConn net.Conn) {
 	} else {
 		logrus.Fatalf("[COURIER] Event type assertion failed")
 	}
-	logrus.Infof("[COURIER] Closing client connection")
-	clientConn.Close()
 }
 
 func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn net.Conn) {
