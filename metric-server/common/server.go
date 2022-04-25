@@ -27,7 +27,7 @@ type Server struct {
 func NewServer(config ServerConfig) (*Server, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", config.Port))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Could not bind to port %s. Error: %s", config.Port, err)
+		return nil, errors.Wrapf(err, "Could not bind to port %s. Error: %s", config.Port, err.Error())
 	}
 	server := &Server{
 		config:   config,
@@ -56,7 +56,7 @@ func (s *Server) Run() {
 	for true {
 		client_conn, err := s.acceptNewConnection()
 		if err != nil {
-			logrus.Fatalf("[SERVER] Could not accept new connection. Error: %s", err)
+			logrus.Fatalf("[SERVER] Could not accept new connection. Error: %s", err.Error())
 			continue
 		}
 		clientsToServe <- client_conn
@@ -69,6 +69,6 @@ func (s *Server) acceptNewConnection() (net.Conn, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "Could not accept new connection")
 	}
-	logrus.Infof("[SERVER] Got connection from %s", clientConn.LocalAddr())
+	logrus.Infof("[SERVER] Got connection from %s", clientConn.LocalAddr().String())
 	return clientConn, nil
 }

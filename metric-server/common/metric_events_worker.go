@@ -30,7 +30,7 @@ func (m *MetricEventsWorker) ServeMetricEvents() {
 		fileToWrite := fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricEvent.MetricId, year, month, day, hours, minutes)
 		err := m.fileMonitor.WriteLineOnFile(metricToWrite, fileToWrite)
 		if err != nil {
-			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\" On file: \"%s\". Error %s", metricToWrite, fileToWrite, err)
+			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\" On file: \"%s\". Error %s", metricToWrite, fileToWrite, err.Error())
 		}
 		logrus.Infof("[METRIC EVENTS WORKER] Metric successfully written: \"%s\" On file: \"%s\"", metricToWrite, fileToWrite)
 	}
