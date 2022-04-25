@@ -1,7 +1,6 @@
 package common
 
 import (
-	"bufio"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -78,7 +77,7 @@ loop:
 			c.conn.Close()
 			return
 		}
-		msg, err := bufio.NewReader(c.conn).ReadString('\n')
+		msg, err := c.readServerResponse()
 		msgID++
 
 		if err != nil {
@@ -104,8 +103,27 @@ loop:
 	c.conn.Close()
 }
 
+func (c *Client) readServerResponse() (string, error) {
+	logrus.Infof("[CLIENT %v] About to send Metric event", c.config.ID)
+
+	var bytes [2]byte
+	_, err := c.conn.Read(bytes[:])
+	if err != nil {
+		return "", err
+	}
+	len := binary.BigEndian.Uint16(bytes[:])
+	msg := make([]byte, len)
+	_, err = c.conn.Read(msg)
+	if err != nil {
+		return "", err
+	}
+	logrus.Infof("[CLIENT %v] Msg Len: %d", c.config.ID, len)
+	logrus.Infof("[CLIENT %v] Msg Type: %d", c.config.ID, msg[0])
+	return string(msg[1:]), nil
+}
+
 func (c *Client) sendMetric(msgID int) {
-	logrus.Infof("About to send Metric event")
+	logrus.Infof("[CLIENT %v] About to send Metric event", c.config.ID)
 	metric := fmt.Sprintf("metric_%d", msgID)
 	metricBytes := []byte(metric)
 	metricLen := uint8(len(metric))
@@ -116,7 +134,6 @@ func (c *Client) sendMetric(msgID int) {
 	valueFieldType := uint8(1)
 	eventType := uint8(0)
 	msgLen := uint16(1 + 1 + 1 + len(metricBytes) + 1 + 4)
-	logrus.Infof("MsgLen: %s", msgLen)
 	var msgLenBytes [2]byte
 	binary.BigEndian.PutUint16(msgLenBytes[:], msgLen)
 
@@ -128,13 +145,13 @@ func (c *Client) sendMetric(msgID int) {
 	bytes = append(bytes, metricBytes[:]...)
 	bytes = append(bytes, valueFieldType)
 	bytes = append(bytes, valueBytes[:]...)
-	logrus.Infof("Bytes to be sent", bytes)
-	logrus.Infof("Finished")
+	logrus.Infof("[CLIENT %v] Bytes to be sent", c.config.ID, bytes)
+	logrus.Infof("[CLIENT %v] Finished", c.config.ID)
 	c.conn.Write(bytes)
 }
 
 func (c *Client) sendQuery(msgID int) {
-	logrus.Infof("About to send Query event")
+	logrus.Infof("[CLIENT %v] About to send Query event", c.config.ID)
 	eventType := uint8(1)
 
 	metricFieldType := uint8(0)
@@ -169,13 +186,12 @@ func (c *Client) sendQuery(msgID int) {
 	bytes = append(bytes, []byte(to)[:]...)
 
 	msgLen := uint16(len(bytes))
-	logrus.Infof("MsgLen: %s", msgLen)
 	var msgLenBytes [2]byte
 	binary.BigEndian.PutUint16(msgLenBytes[:], msgLen)
 
 	bytes = append(msgLenBytes[:], bytes[:]...)
 
-	logrus.Infof("Bytes to be sent", bytes)
-	logrus.Infof("Finished")
+	logrus.Infof("[CLIENT %v] Bytes to be sent", c.config.ID, bytes)
+	logrus.Infof("[CLIENT %v] Finished", c.config.ID)
 	c.conn.Write(bytes)
 }
