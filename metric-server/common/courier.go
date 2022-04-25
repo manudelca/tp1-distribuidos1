@@ -32,7 +32,7 @@ func (c *Courier) ServeClients(clientsToServe chan net.Conn) {
 func (c *Courier) handleClientConnection(clientConn net.Conn) {
 	event, err := protocol.GetEventFromMessage(clientConn)
 	if err != nil {
-		logrus.Fatalf("[COURIER] Error trying to getEventFromMessage. Error: %s", err.Error())
+		logrus.Infof("[COURIER] Error trying to getEventFromMessage. Error: %s", err.Error())
 		return
 	}
 	logrus.Infof("[COURIER] Event type %d succesfully parsed", event.GetType())
@@ -42,7 +42,7 @@ func (c *Courier) handleClientConnection(clientConn net.Conn) {
 	} else if queryEvent, ok := event.(events.QueryEvent); ok {
 		c.answerQueryEvent(queryEvent, clientConn)
 	} else {
-		logrus.Fatalf("[COURIER] Event type assertion failed")
+		logrus.Infof("[COURIER] Event type assertion failed")
 	}
 }
 
@@ -56,7 +56,7 @@ func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn n
 	c.metricEventsQueue <- metricEvent
 	err := protocol.SendSuccess("Metric succesfully received", clientConn)
 	if err != nil {
-		logrus.Fatalf("[COURIER] An error ocurred while trying to answer client metric. Error: %s", err.Error())
+		logrus.Infof("[COURIER] An error ocurred while trying to answer client metric. Error: %s", err.Error())
 	}
 }
 
@@ -73,6 +73,6 @@ func (c *Courier) answerQueryEvent(queryEvent events.QueryEvent, clientConn net.
 func (c *Courier) rejectClient(clientConn net.Conn) {
 	err := protocol.SendServerError("Server not available. Try again later", clientConn)
 	if err != nil {
-		logrus.Fatalf("[COURIER] An error ocurred while trying to reject client. Error: %s", err.Error())
+		logrus.Infof("[COURIER] An error ocurred while trying to reject client. Error: %s", err.Error())
 	}
 }
