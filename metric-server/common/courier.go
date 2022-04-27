@@ -56,7 +56,6 @@ func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn n
 		return
 	}
 	logrus.Infof("[COURIER] Stored metric event in queue: ", metricEvent)
-	c.metricEventsQueue <- metricEvent
 	err := protocol.SendSuccess("Metric succesfully received", clientConn)
 	if err != nil {
 		logrus.Infof("[COURIER] An error ocurred while trying to answer client metric. Error: %s", err.Error())
