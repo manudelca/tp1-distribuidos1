@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/pkg/errors"
@@ -29,16 +28,13 @@ func parseFloat(message []byte, i int) (float32, int, error) {
 	return value, i + 4, nil
 }
 
-func parseDate(message []byte, i int, layout string) (time.Time, int, error) {
-	if len(message) < len(layout) {
-		errorMsg := fmt.Sprintf("The message is shorter than the layout proposed (YYYY-MM-DD HH:mm:ss)")
-		return time.Time{}, i, InvalidDateFieldError{errorMsg: errorMsg}
+func parseDate(message []byte, i int) (int64, int, error) {
+	if len(message) < 8 {
+		errorMsg := fmt.Sprintf("The message is shorter than Unix timestamp (int64)")
+		return 0, i, InvalidDateFieldError{errorMsg: errorMsg}
 	}
-	date, err := time.Parse(layout, string(message[:len(layout)]))
-	if err != nil {
-		return time.Time{}, i, errors.Wrapf(err, "Could not parse date using layout YYYY-MM-DD HH:mm:ss")
-	}
-	return date, i + len(layout), nil
+	date := int64(binary.BigEndian.Uint64(message[:8]))
+	return date, i + 8, nil
 }
 
 func parseMetricId(message []byte, i int) (string, int, error) {
@@ -78,13 +74,12 @@ func parseAggregationWindowsSecs(message []byte, i int) (float32, int, error) {
 	return aggregationWindowsSecs, i, nil
 }
 
-func parseDateInterval(message []byte, i int) (time.Time, time.Time, int, error) {
-	layout := "2006-01-02 03:04:05"
-	from, newIndex, err := parseDate(message, i, layout)
+func parseDateInterval(message []byte, i int) (int64, int64, int, error) {
+	from, newIndex, err := parseDate(message, i)
 	if err != nil {
 		return from, from, i, errors.Wrapf(err, "Could not parse From date")
 	}
-	to, newIndex, err := parseDate(message[len(layout):], newIndex, layout)
+	to, newIndex, err := parseDate(message[8:], newIndex)
 	if err != nil {
 		return from, to, i, errors.Wrapf(err, "Could not parse To date")
 	}

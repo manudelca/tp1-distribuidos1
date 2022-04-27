@@ -81,7 +81,7 @@ func buildMetricMessage(message []byte) (events.MetricEvent, error) {
 	if !areAllFieldsPresent {
 		return events.MetricEvent{}, InvalidMessageFormatError{errorMsg: "Missing required fields. MetricID and Value are needed"}
 	}
-	metricEvent.Date = time.Now()
+	metricEvent.Date = time.Now().Unix()
 	return metricEvent, nil
 }
 
@@ -127,8 +127,8 @@ func buildQueryMessage(message []byte) (events.QueryEvent, error) {
 			if err != nil {
 				return events.QueryEvent{}, errors.Wrapf(err, "Could not parse Date interval when trying to build QueryMessage from message received")
 			}
-			query.From = from
-			query.To = to
+			query.FromDate = from
+			query.ToDate = to
 			i = newIndex
 		default:
 			err := fmt.Sprintf("Invalid message format for MetricEvent. Unrecognized Field type %d", fieldType)

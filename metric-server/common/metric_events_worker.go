@@ -22,9 +22,9 @@ func NewMetricEventsWorker(metricEventsQueue chan events.MetricEvent, fileMonito
 func (m *MetricEventsWorker) ServeMetricEvents() {
 	for metricEvent := range m.metricEventsQueue {
 		logrus.Infof("[METRIC EVENTS WORKER] Processing metric event: ", metricEvent)
-		metricToWrite := storage_protocol.ParseMetrictToLine(metricEvent)
+		metricToWrite := storage_protocol.ParseMetrictToBytes(metricEvent)
 		fileToWrite := storage_protocol.GetFileName(metricEvent.MetricId, metricEvent.Date)
-		err := m.fileMonitor.WriteLineOnFile(metricToWrite, fileToWrite)
+		err := m.fileMonitor.WriteMetricOnFile(metricToWrite, fileToWrite)
 		if err != nil {
 			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\" On file: \"%s\". Error %s", metricToWrite, fileToWrite, err.Error())
 		}

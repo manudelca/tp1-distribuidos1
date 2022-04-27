@@ -18,11 +18,11 @@ func NewFileMonitor() *FileMonitor {
 	}
 }
 
-func (f *FileMonitor) ReadLine(name string, i int) (string, error) {
-	return "", errors.New("ReadLine not implemented yet")
+func (f *FileMonitor) ReadMetric(name string, i int) ([]byte, error) {
+	return nil, errors.New("ReadLine not implemented yet")
 }
 
-func (f *FileMonitor) WriteLineOnFile(line string, fileName string) error {
+func (f *FileMonitor) WriteMetricOnFile(bytes []byte, fileName string) error {
 	fileMutex, ok := f.mapStringToMutex.Get(fileName)
 	if !ok {
 		mut := sync.Mutex{}
@@ -33,8 +33,8 @@ func (f *FileMonitor) WriteLineOnFile(line string, fileName string) error {
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(line); {
-		written, err := file.WriteString(line[i:])
+	for i := 0; i < len(bytes); {
+		written, err := file.Write(bytes[i:])
 		if err != nil {
 			fileMutex.Unlock()
 			return err

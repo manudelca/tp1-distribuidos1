@@ -1,39 +1,31 @@
 package storage_protocol
 
 import (
+	"encoding/binary"
+	"errors"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
+	"math"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
-	"github.com/pkg/errors"
 )
 
-func ParseLine(line string) (events.MetricEvent, error) {
-	lineSplit := strings.Split(line[:(len(line)-1)], " ")
-	if len(lineSplit) < 3 {
-		return events.MetricEvent{}, errors.New("Could not parse line. Length of splitted line is less than 3")
+func ParseBytesToMetric(bytes []byte, metricId string) (events.MetricEvent, error) {
+	if len(bytes) < (8 + 4) {
+		return events.MetricEvent{}, errors.New("Bytes array is to short. 12 bytes needed (int64 and float32)")
 	}
-	date, err := time.Parse("2006-01-02 03:04:05", lineSplit[0])
-	if err != nil {
-		return events.MetricEvent{}, errors.Wrapf(err, "Could not parse Date from line")
-	}
-	metricId := lineSplit[1]
-	value, err := strconv.ParseFloat(lineSplit[2], 32)
-	if err != nil {
-		return events.MetricEvent{}, errors.Wrapf(err, "Could not parse Value from line")
-	}
-	return events.MetricEvent{MetricId: metricId, Date: date, Value: float32(value)}, nil
+	date := int64(binary.BigEndian.Uint64(bytes[:8]))
+	value := math.Float32frombits(binary.BigEndian.Uint32(bytes[8:]))
+	return events.MetricEvent{MetricId: metricId, Date: date, Value: value}, nil
 }
 
-func ParseMetrictToLine(metricEvent events.MetricEvent) string {
-	return fmt.Sprintf("%s %s %f\n", metricEvent.Date.Format("2006-01-02 03:04:05"), metricEvent.MetricId, metricEvent.Value)
+func ParseMetrictToBytes(metricEvent events.MetricEvent) []byte {
+	bytes := make([]byte, 8+4)
+	binary.BigEndian.PutUint64(bytes[:8], uint64(metricEvent.Date))
+	binary.BigEndian.PutUint32(bytes[8:], math.Float32bits(metricEvent.Value))
+	return bytes
 
 }
 
-func GetFileName(metricId string, date time.Time) string {
-	year, month, day := date.Date()
-	hours, minutes, _ := date.Clock()
-	return fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricId, year, month, day, hours, minutes)
+func GetFileName(metricId string, date int64) string {
+	return fmt.Sprintf("%s_%d", metricId, date)
 }

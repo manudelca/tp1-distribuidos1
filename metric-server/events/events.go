@@ -1,7 +1,5 @@
 package events
 
-import "time"
-
 type Event interface {
 	GetType() EventType
 }
@@ -16,7 +14,7 @@ const (
 type MetricEvent struct {
 	MetricId string
 	Value    float32
-	Date     time.Time
+	Date     int64
 }
 
 func (m MetricEvent) GetType() EventType {
@@ -27,8 +25,8 @@ type QueryEvent struct {
 	MetricId               string
 	Aggregation            AggregationType
 	AggregationWindowsSecs float32
-	From                   time.Time
-	To                     time.Time
+	FromDate               int64
+	ToDate                 int64
 }
 
 func (q QueryEvent) GetType() EventType {
