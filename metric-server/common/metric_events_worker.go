@@ -1,10 +1,9 @@
 package common
 
 import (
-	"fmt"
-
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/manudelca/tp1-distribuidos1/metric-server/file_monitor"
+	"github.com/manudelca/tp1-distribuidos1/metric-server/storage_protocol"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,13 +20,10 @@ func NewMetricEventsWorker(metricEventsQueue chan events.MetricEvent, fileMonito
 }
 
 func (m *MetricEventsWorker) ServeMetricEvents() {
-	layout := "2006-01-02 03:04:05"
 	for metricEvent := range m.metricEventsQueue {
 		logrus.Infof("[METRIC EVENTS WORKER] Processing metric event: ", metricEvent)
-		metricToWrite := fmt.Sprintf("%s %s %f\n", metricEvent.Date.Format(layout), metricEvent.MetricId, metricEvent.Value)
-		year, month, day := metricEvent.Date.Date()
-		hours, minutes, _ := metricEvent.Date.Clock()
-		fileToWrite := fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricEvent.MetricId, year, month, day, hours, minutes)
+		metricToWrite := storage_protocol.ParseMetrictToLine(metricEvent)
+		fileToWrite := storage_protocol.GetFileName(metricEvent.MetricId, metricEvent.Date)
 		err := m.fileMonitor.WriteLineOnFile(metricToWrite, fileToWrite)
 		if err != nil {
 			logrus.Infof("[METRIC EVENTS WORKER] Failed to write metric: \"%s\" On file: \"%s\". Error %s", metricToWrite, fileToWrite, err.Error())

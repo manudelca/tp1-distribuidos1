@@ -17,7 +17,7 @@ func NewFileMonitor() *FileMonitor {
 	}
 }
 
-func (f *FileMonitor) ReadLine(name string) (string, error) {
+func (f *FileMonitor) ReadLine(name string, i int) (string, error) {
 	return "", nil
 }
 

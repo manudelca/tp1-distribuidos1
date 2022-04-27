@@ -1,6 +1,7 @@
 package storage_protocol
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -24,4 +25,15 @@ func ParseLine(line string) (events.MetricEvent, error) {
 		return events.MetricEvent{}, errors.Wrapf(err, "Could not parse Value from line")
 	}
 	return events.MetricEvent{MetricId: metricId, Date: date, Value: float32(value)}, nil
+}
+
+func ParseMetrictToLine(metricEvent events.MetricEvent) string {
+	return fmt.Sprintf("%s %s %f\n", metricEvent.Date.Format("2006-01-02 03:04:05"), metricEvent.MetricId, metricEvent.Value)
+
+}
+
+func GetFileName(metricId string, date time.Time) string {
+	year, month, day := date.Date()
+	hours, minutes, _ := date.Clock()
+	return fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricId, year, month, day, hours, minutes)
 }
