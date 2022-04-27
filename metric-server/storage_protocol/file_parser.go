@@ -11,7 +11,7 @@ import (
 )
 
 func ParseLine(line string) (events.MetricEvent, error) {
-	lineSplit := strings.Split(line[:len(line)-1], " ")
+	lineSplit := strings.Split(line[:(len(line)-1)], " ")
 	if len(lineSplit) < 3 {
 		return events.MetricEvent{}, errors.New("Could not parse line. Length of splitted line is less than 3")
 	}

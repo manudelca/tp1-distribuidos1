@@ -1,6 +1,7 @@
 package file_monitor
 
 import (
+	"errors"
 	"os"
 	"sync"
 
@@ -18,7 +19,7 @@ func NewFileMonitor() *FileMonitor {
 }
 
 func (f *FileMonitor) ReadLine(name string, i int) (string, error) {
-	return "", nil
+	return "", errors.New("ReadLine not implemented yet")
 }
 
 func (f *FileMonitor) WriteLineOnFile(line string, fileName string) error {
