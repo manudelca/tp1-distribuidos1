@@ -32,7 +32,12 @@ func (f *FileMonitor) FileExists(fileName string) bool {
 func (f *FileMonitor) ReadMetric(fileName string, metricIndex int) ([]byte, error) {
 	fileMutex, ok := f.mapStringToMutex.Get(fileName)
 	if !ok {
-		return nil, errors.New("Non exisiting file")
+		if f.FileExists(fileName) {
+			mut := sync.Mutex{}
+			fileMutex = f.mapStringToMutex.Add(fileName, &mut)
+		} else {
+			return nil, errors.New("Non exisiting file")
+		}
 	}
 	fileMutex.Lock()
 	file, err := os.Open(fileName)
