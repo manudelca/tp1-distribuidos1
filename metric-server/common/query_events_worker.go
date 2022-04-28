@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -24,6 +25,7 @@ func NewQueryEventsWorker(queryEventsQueue chan events.QueryEvent, fileMonitor *
 }
 
 func (q *QueryEventsWorker) processFile(fileName string, metricId string, left time.Time, right time.Time) (float32, float32, float32, float32, error) {
+	logrus.Infof("[QUERY EVENTS WORKER] About to process file: %s", fileName)
 	count := float32(0)
 	min := float32(math.MaxFloat32)
 	max := float32(-math.MaxFloat32)
@@ -32,6 +34,9 @@ func (q *QueryEventsWorker) processFile(fileName string, metricId string, left t
 		bytes, err := q.fileMonitor.ReadMetric(fileName, i)
 		if err != nil {
 			return 0, 0, 0, 0, err
+		}
+		if len(bytes) == 0 {
+			break
 		}
 		metricEvent, err := storage_protocol.ParseBytesToMetric(bytes, metricId)
 		if err != nil {
@@ -58,23 +63,29 @@ func (q *QueryEventsWorker) processTimeInterval(metricId string, aggregationType
 	min := float32(math.MaxFloat32)
 	max := float32(-math.MaxFloat32)
 	sum := float32(0)
-	for fileTimestamp := left.Truncate(time.Minute); fileTimestamp.Before(right); left.Add(time.Minute) {
-		year, month, day := fileTimestamp.Date()
-		hours, minutes, _ := fileTimestamp.Clock()
-		fileName := fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricId, year, month, day, hours, minutes)
-		countFile, minFile, maxFile, sumFile, err := q.processFile(fileName, metricId, left, right)
-		if err != nil {
-			logrus.Infof("[QUERY EVENTS WORKER] Failed to read line from file: %s. Error: %s", fileName, err.Error())
-			return 0, 0, 0, 0, err
+	for currentLeftTime := left.Truncate(time.Minute); currentLeftTime.Before(right); currentLeftTime = currentLeftTime.Add(time.Minute) {
+		fileName := storage_protocol.GetFileName(metricId, currentLeftTime.Unix())
+		if q.fileMonitor.FileExists(fileName) {
+			countFile, minFile, maxFile, sumFile, err := q.processFile(fileName, metricId, currentLeftTime, right)
+			if err != nil {
+				logrus.Infof("[QUERY EVENTS WORKER] Failed to read line from file: %s. Error: %s", fileName, err.Error())
+				return 0, 0, 0, 0, err
+			}
+			count += countFile
+			sum += sumFile
+			if maxFile > max {
+				max = maxFile
+			}
+			if minFile < min {
+				min = minFile
+			}
+		} else {
+			logrus.Infof("[QUERY EVENTS WORKER] File not found: %s", fileName)
 		}
-		count += countFile
-		sum += sumFile
-		if maxFile > max {
-			max = maxFile
-		}
-		if minFile < min {
-			min = minFile
-		}
+	}
+	if count == 0 {
+		// Border case
+		return 0, 0, 0, 0, errors.New(fmt.Sprintf("No file was processed in the time interval %s, %s", left, right))
 	}
 	return count, min, max, sum / count, nil
 }
@@ -95,22 +106,24 @@ func (q *QueryEventsWorker) handleQueryEvent(queryEvent events.QueryEvent) {
 		count, min, max, avg, err := q.processTimeInterval(queryEvent.MetricId, queryEvent.Aggregation, leftWindowLimit, rightWindowLimit)
 		if err != nil {
 			logrus.Infof("[QUERY EVENTS WORKER] Error processing time interval From Date: %s, To Date: %s", leftWindowLimit, rightWindowLimit)
-		}
-		switch queryEvent.Aggregation {
-		case events.COUNT:
-			resultInterval = count
-		case events.MIN:
-			resultInterval = min
-		case events.MAX:
-			resultInterval = max
-		case events.AVG:
-			resultInterval = avg
+		} else {
+			switch queryEvent.Aggregation {
+			case events.COUNT:
+				resultInterval = count
+			case events.MIN:
+				resultInterval = min
+			case events.MAX:
+				resultInterval = max
+			case events.AVG:
+				resultInterval = avg
+			}
 		}
 		result = append(result, resultInterval)
 		leftWindowLimit = rightWindowLimit
 	}
 	logrus.Infof("[QUERY EVENTS WORKER] Finished processing every time window")
 	logrus.Infof("[QUERY EVENTS WORKER] Result: ", result)
+	logrus.Infof("[QUERY EVENTS WORKER] Result len: ", len(result))
 }
 
 func (q *QueryEventsWorker) ServeQueryEvents() {

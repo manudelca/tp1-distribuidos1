@@ -168,8 +168,23 @@ func (c *Client) sendQuery(msgID int) {
 	binary.BigEndian.PutUint32(aggregationWindowsSecsBytes[:], math.Float32bits(aggregationWindowsSecs))
 
 	dateTimeIntervalFieldType := uint8(4)
-	from := "2020-01-01 00:00:00"
-	to := "2020-01-01 00:05:00"
+	layout := "2006-01-02 15:04:05"
+	fromDate, err := time.Parse(layout, "2022-04-28 00:15:00")
+	if err != nil {
+		logrus.Infof("[CLIENT] Error parsing date %s", err.Error())
+	}
+	from := fromDate.Unix()
+	fromBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(fromBytes, uint64(from))
+	toDate, err := time.Parse(layout, "2022-04-28 00:20:00")
+	if err != nil {
+		logrus.Infof("[CLIENT] Error parsing date %s", err.Error())
+	}
+	to := toDate.Unix()
+	toBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(toBytes, uint64(to))
+	logrus.Infof("fromBytes ", fromBytes)
+	logrus.Infof("toBytes ", toBytes)
 
 	var bytes []byte
 
@@ -182,14 +197,17 @@ func (c *Client) sendQuery(msgID int) {
 	bytes = append(bytes, aggregationWindowsSecsFieldType)
 	bytes = append(bytes, aggregationWindowsSecsBytes[:]...)
 	bytes = append(bytes, dateTimeIntervalFieldType)
-	bytes = append(bytes, []byte(from)[:]...)
-	bytes = append(bytes, []byte(to)[:]...)
+	bytes = append(bytes, fromBytes...)
+	bytes = append(bytes, toBytes...)
 
 	msgLen := uint16(len(bytes))
 	var msgLenBytes [2]byte
 	binary.BigEndian.PutUint16(msgLenBytes[:], msgLen)
 
 	bytes = append(msgLenBytes[:], bytes[:]...)
+
+	a := time.Minute / 5
+	time.Sleep(a)
 
 	logrus.Infof("[CLIENT %v] Bytes to be sent", c.config.ID, bytes)
 	logrus.Infof("[CLIENT %v] Finished", c.config.ID)

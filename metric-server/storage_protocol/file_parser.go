@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 )
@@ -27,5 +28,8 @@ func ParseMetrictToBytes(metricEvent events.MetricEvent) []byte {
 }
 
 func GetFileName(metricId string, date int64) string {
-	return fmt.Sprintf("%s_%d", metricId, date)
+	timeParsed := time.Unix(date, 0)
+	year, month, day := timeParsed.Date()
+	hours, minutes, _ := timeParsed.Clock()
+	return fmt.Sprintf("%s_%d%02d%02d_%02d%02d", metricId, year, month, day, hours, minutes)
 }
