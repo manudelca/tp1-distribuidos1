@@ -80,7 +80,8 @@ func (q *QueryEventsWorker) processTimeInterval(metricId string, aggregationType
 				min = minFile
 			}
 		} else {
-			logrus.Infof("[QUERY EVENTS WORKER] File not found: %s", fileName)
+			// Log too noisy
+			// logrus.Infof("[QUERY EVENTS WORKER] File not found: %s", fileName)
 		}
 	}
 	if count == 0 {
@@ -105,7 +106,8 @@ func (q *QueryEventsWorker) handleQueryEvent(queryEvent events.QueryEvent) event
 		resultInterval := float32(0)
 		count, min, max, avg, err := q.processTimeInterval(queryEvent.MetricId, queryEvent.Aggregation, leftWindowLimit, rightWindowLimit)
 		if err != nil {
-			logrus.Infof("[QUERY EVENTS WORKER] Error processing time interval From Date: %s, To Date: %s", leftWindowLimit, rightWindowLimit)
+			// Log too noisy
+			// logrus.Infof("[QUERY EVENTS WORKER] Error processing time interval From Date: %s, To Date: %s", leftWindowLimit, rightWindowLimit)
 		} else {
 			switch queryEvent.Aggregation {
 			case events.COUNT:
