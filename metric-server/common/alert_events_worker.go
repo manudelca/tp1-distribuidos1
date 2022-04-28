@@ -50,6 +50,7 @@ func (a *AlertEventsWorker) ServeAlertEvents() {
 			a.insertIntoMetrics(metric)
 		}
 	}
+	logrus.Infof("[ALERT EVENTS WORKER] eventsQueue closed. Proceeding to shutdown")
 	a.shutdown <- true
 }
 

@@ -122,8 +122,11 @@ func (s *Server) Run() {
 	}
 	close(queueForAlerts)
 	waitMetricWorkers.Wait()
+	logrus.Infof("[SERVER] Ended all metric event workers")
 	waitQueryEventsWorkers.Wait()
+	logrus.Infof("[SERVER] Ended all query event workers")
 	<-alertEventsWorkerShutdown
+	logrus.Infof("[SERVER] Ended alert event worker")
 
 	logrus.Infof("[SERVER] Goodbye :)")
 }

@@ -149,5 +149,6 @@ func (q *QueryEventsWorker) ServeQueryEvents() {
 			q.queryEventsQueue <- result
 		}
 	}
+	logrus.Infof("[QUERY EVENTS WORKER] queryEventsQueue closed. Proceeding to shutdown")
 	q.wait.Done()
 }

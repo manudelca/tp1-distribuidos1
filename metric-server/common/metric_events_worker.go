@@ -34,5 +34,6 @@ func (m *MetricEventsWorker) ServeMetricEvents() {
 		}
 		logrus.Infof("[METRIC EVENTS WORKER] Metric successfully written: \"%s\" On file: \"%s\"", metricToWrite, fileToWrite)
 	}
+	logrus.Infof("[METRIC EVENTS WORKER] metricEventsQueue closed. Proceeding to shutdown")
 	m.wait.Done()
 }
