@@ -21,7 +21,7 @@ func sendMessage(message Message, clientConn net.Conn) error {
 }
 
 func SendServerError(errorMsg string, clientConn net.Conn) error {
-	message := Message{MsgType: SERVERERROR, Message: errorMsg}
+	message := Message{MsgType: ServerError, Message: errorMsg}
 	err := sendMessage(message, clientConn)
 	if err != nil {
 		return errors.Wrapf(err, "Could not send server error")
@@ -30,7 +30,7 @@ func SendServerError(errorMsg string, clientConn net.Conn) error {
 }
 
 func SendSuccess(message string, clientConn net.Conn) error {
-	messageToSend := Message{MsgType: SUCCESS, Message: message}
+	messageToSend := Message{MsgType: Success, Message: message}
 	err := sendMessage(messageToSend, clientConn)
 	if err != nil {
 		return errors.Wrapf(err, "Could not send success message")

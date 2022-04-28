@@ -3,9 +3,9 @@ package protocol
 type MsgType uint8
 
 const (
-	SUCCESS MsgType = iota
-	FORMATERROR
-	SERVERERROR
+	Success MsgType = iota
+	FormatError
+	ServerError
 )
 
 type Message struct {
