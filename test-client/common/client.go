@@ -104,7 +104,7 @@ loop:
 }
 
 func (c *Client) readServerResponse() (string, error) {
-	logrus.Infof("[CLIENT %v] About to send Metric event", c.config.ID)
+	logrus.Infof("[CLIENT %v] Reading server response", c.config.ID)
 
 	var bytes [2]byte
 	_, err := c.conn.Read(bytes[:])

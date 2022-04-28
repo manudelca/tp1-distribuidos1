@@ -87,7 +87,7 @@ func (c *Courier) answerQueryEvent(queryEvent events.QueryEvent, clientConn net.
 			logrus.Infof("[COURIER] Could not assert event to events.QueryResultEvent")
 			return
 		}
-		logrus.Infof("[COURIER] Query was succesfully calculated")
+		logrus.Infof("[COURIER] Received response from Query worker")
 		err := protocol.SendQueryResult(QueryResultEvent, clientConn)
 		if err != nil {
 			logrus.Infof("[COURIER] An error ocurred while trying to answer client query. Error: %s", err.Error())
