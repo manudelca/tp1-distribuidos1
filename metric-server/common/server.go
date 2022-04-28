@@ -63,7 +63,7 @@ func (s *Server) Run() {
 	var waitQueryEventsWorkers sync.WaitGroup
 	for i := 0; i < s.config.QueryEventsWorkers; i++ {
 		waitQueryEventsWorkers.Add(1)
-		queryEventsToServe := make(chan events.Event, s.config.QueryEventsBacklog)
+		queryEventsToServe := make(chan events.Event)
 		queryEventsToServePool[i] = queryEventsToServe
 		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, fileMonitor, &waitQueryEventsWorkers)
 		go queryEventsWorker.ServeQueryEvents()
