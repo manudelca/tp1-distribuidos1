@@ -16,10 +16,11 @@ type AlertEventsWorker struct {
 	fileName       string
 }
 
-func NewAlertEventsWorker(eventsQueue chan events.Event) *AlertEventsWorker {
+func NewAlertEventsWorker(eventsQueue chan events.Event, fileName string) *AlertEventsWorker {
 	return &AlertEventsWorker{
 		eventsQueue:    eventsQueue,
 		orderedMetrics: make([]events.MetricEvent, 0),
+		fileName:       fileName,
 	}
 }
 

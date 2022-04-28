@@ -6,3 +6,8 @@ metricEventsBacklog: 10
 queryEventsBacklog: 10
 metricEventsWorkers: 5
 queryEventsWorkers: 5
+alertMetricId: "metric_1"
+alertAggregation: 3
+alertAggregationWindowSecs: 30
+alertLimit: 2
+alertFileName: alerts

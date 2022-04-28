@@ -11,12 +11,17 @@ import (
 )
 
 type ServerConfig struct {
-	Port                string
-	Couriers            int
-	MetricEventsBacklog int
-	QueryEventsBacklog  int
-	MetricEventsWorkers int
-	QueryEventsWorkers  int
+	Port                       string
+	Couriers                   int
+	MetricEventsBacklog        int
+	QueryEventsBacklog         int
+	MetricEventsWorkers        int
+	QueryEventsWorkers         int
+	AlertFileName              string
+	AlertMetricId              string
+	AlertAggregation           events.AggregationType
+	AlertAggregationWindowSecs float32
+	AlertLimit                 float32
 }
 
 type Server struct {
@@ -41,6 +46,8 @@ func (s *Server) Run() {
 	metricEventsToServe := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
 	queryEventsToServePool := make([]chan events.QueryEvent, s.config.QueryEventsWorkers)
 	fileMonitor := file_monitor.NewFileMonitor()
+
+	logrus.Infof("[SERVER] Initializing Metric and Query workers")
 	for i := 0; i < s.config.MetricEventsWorkers; i++ {
 		metricEventsWorker := NewMetricEventsWorker(metricEventsToServe, fileMonitor)
 		go metricEventsWorker.ServeMetricEvents()
@@ -51,13 +58,27 @@ func (s *Server) Run() {
 		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, fileMonitor)
 		go queryEventsWorker.ServeQueryEvents()
 	}
+
+	logrus.Infof("[SERVER] Initializing Alert worker")
 	queueForAlerts := make(chan events.Event)
-	alertEventsWorker := NewAlertEventsWorker(queueForAlerts)
+	alertEventsWorker := NewAlertEventsWorker(queueForAlerts, s.config.AlertFileName)
 	go alertEventsWorker.ServeAlertEvents()
+
+	logrus.Infof("[SERVER] Initializing Couriers workers")
 	for i := 0; i < s.config.Couriers; i++ {
 		courier := NewCourier(metricEventsToServe, queryEventsToServePool, queueForAlerts)
 		go courier.ServeClients(clientsToServe)
 	}
+
+	logrus.Infof("[SERVER] Initializing Clock worker")
+	alertEvent := events.AlertEvent{
+		MetricId:               s.config.AlertFileName,
+		Aggregation:            s.config.AlertAggregation,
+		Limit:                  s.config.AlertLimit,
+		AggregationWindowsSecs: s.config.AlertAggregationWindowSecs,
+	}
+	clockWorker := NewClockWorker(queueForAlerts, alertEvent)
+	go clockWorker.Run()
 	for true {
 		client_conn, err := s.acceptNewConnection()
 		if err != nil {

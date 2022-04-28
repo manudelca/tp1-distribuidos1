@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/common"
+	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -79,6 +80,11 @@ func PrintConfig(v *viper.Viper) {
 	logrus.Infof("[MAIN] Query events backlog: %s", v.GetString("queryEventsBacklog"))
 	logrus.Infof("[MAIN] Metric events workers: %s", v.GetString("metricEventsWorkers"))
 	logrus.Infof("[MAIN] Query events workers: %s", v.GetString("queryEventsWorkers"))
+	logrus.Infof("[MAIN] Alert metric id: %s", v.GetString("alertMetricId"))
+	logrus.Infof("[MAIN] Alert Aggregation: %s", v.GetString("alertAggregation"))
+	logrus.Infof("[MAIN] Alert aggregation windows secs: %s", v.GetString("alertAggregationWindowSecs"))
+	logrus.Infof("[MAIN] Alert limit: %s", v.GetString("alertLimit"))
+	logrus.Infof("[MAIN] Alert file name: %s", v.GetString("alertFileName"))
 }
 
 func main() {
@@ -95,12 +101,17 @@ func main() {
 	PrintConfig(v)
 
 	serverConfig := common.ServerConfig{
-		Port:                v.GetString("port"),
-		Couriers:            v.GetInt("couriers"),
-		MetricEventsBacklog: v.GetInt("metricEventsBacklog"),
-		QueryEventsBacklog:  v.GetInt("queryEventsBacklog"),
-		MetricEventsWorkers: v.GetInt("metricEventsWorkers"),
-		QueryEventsWorkers:  v.GetInt("queryEventsWorkers"),
+		Port:                       v.GetString("port"),
+		Couriers:                   v.GetInt("couriers"),
+		MetricEventsBacklog:        v.GetInt("metricEventsBacklog"),
+		QueryEventsBacklog:         v.GetInt("queryEventsBacklog"),
+		MetricEventsWorkers:        v.GetInt("metricEventsWorkers"),
+		QueryEventsWorkers:         v.GetInt("queryEventsWorkers"),
+		AlertMetricId:              v.GetString("alertMetricId"),
+		AlertAggregation:           events.AggregationType(v.GetUint("alertAggregation")),
+		AlertAggregationWindowSecs: float32(v.GetFloat64("alertAggregationWindowSecs")),
+		AlertLimit:                 float32(v.GetFloat64("alertLimit")),
+		AlertFileName:              v.GetString("alertFileName"),
 	}
 
 	server, err := common.NewServer(serverConfig)
