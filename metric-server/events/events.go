@@ -9,6 +9,7 @@ type EventType uint8
 const (
 	METRIC EventType = iota
 	QUERY
+	ALERT
 )
 
 type MetricEvent struct {
@@ -45,3 +46,14 @@ const (
 	MAX
 	COUNT
 )
+
+type AlertEvent struct {
+	MetricId               string
+	Aggregation            AggregationType
+	Limit                  float32
+	AggregationWindowsSecs float32
+}
+
+func (a AlertEvent) GetType() EventType {
+	return ALERT
+}

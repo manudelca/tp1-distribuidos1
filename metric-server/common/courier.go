@@ -12,12 +12,14 @@ import (
 type Courier struct {
 	metricEventsQueue chan events.MetricEvent
 	queryEventsPool   []chan events.QueryEvent
+	alertEventsQueue  chan events.Event
 }
 
-func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.QueryEvent) *Courier {
+func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.QueryEvent, alertEventsQueue chan events.Event) *Courier {
 	courier := Courier{
 		metricEventsQueue: metricEventsQueue,
 		queryEventsPool:   queryEventsPool,
+		alertEventsQueue:  alertEventsQueue,
 	}
 	return &courier
 }
@@ -50,6 +52,7 @@ func (c *Courier) handleClientConnection(clientConn net.Conn) {
 func (c *Courier) answerMetricEvent(metricEvent events.MetricEvent, clientConn net.Conn) {
 	select {
 	case c.metricEventsQueue <- metricEvent:
+		c.alertEventsQueue <- metricEvent
 	default:
 		logrus.Infof("[COURIER] MetricEventsQueue full. Rejecting client")
 		c.rejectClient(clientConn)

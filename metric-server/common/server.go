@@ -51,8 +51,11 @@ func (s *Server) Run() {
 		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, fileMonitor)
 		go queryEventsWorker.ServeQueryEvents()
 	}
+	queueForAlerts := make(chan events.Event)
+	alertEventsWorker := NewAlertEventsWorker(queueForAlerts)
+	go alertEventsWorker.ServeAlertEvents()
 	for i := 0; i < s.config.Couriers; i++ {
-		courier := NewCourier(metricEventsToServe, queryEventsToServePool)
+		courier := NewCourier(metricEventsToServe, queryEventsToServePool, queueForAlerts)
 		go courier.ServeClients(clientsToServe)
 	}
 	for true {
