@@ -74,8 +74,8 @@ func (a *AlertEventsWorker) insertIntoMetrics(metric events.MetricEvent) {
 }
 
 func (a *AlertEventsWorker) alert(aggregation string, result float32, left time.Time, right time.Time) {
-	logrus.Infof("[ALERT EVENTS WORKER] %d - %d %s exceeded %f", left, right, aggregation, result)
-	a.writeAlertOnFile(fmt.Sprintf("%d %d %s %f\n", left, right, aggregation, result))
+	logrus.Infof("[ALERT EVENTS WORKER] %d - %d %s exceeded %f", left.Unix(), right.Unix(), aggregation, result)
+	a.writeAlertOnFile(fmt.Sprintf("%d %d %s %f\n", left.Unix(), right.Unix(), aggregation, result))
 }
 
 func (a *AlertEventsWorker) writeAlertOnFile(line string) {
@@ -101,7 +101,7 @@ func (a *AlertEventsWorker) processInterval(alert events.AlertEvent, metrics []e
 	max := float32(-math.MaxFloat32)
 	sum := float32(0)
 
-	for _, metric := range a.orderedMetrics {
+	for _, metric := range metrics {
 		if metric.MetricId != alert.MetricId {
 			continue
 		}
@@ -131,7 +131,8 @@ func (a *AlertEventsWorker) processInterval(alert events.AlertEvent, metrics []e
 		result = count
 		aggregationStr = "COUNT"
 	}
-	if alert.Limit < result {
+	if alert.Limit < result && (count > 0) {
+		// count > 0 to make sure at least one metric with the desired metricId was found
 		a.alert(aggregationStr, result, left, right)
 	}
 }

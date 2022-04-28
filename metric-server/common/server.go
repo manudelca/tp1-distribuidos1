@@ -72,7 +72,7 @@ func (s *Server) Run() {
 
 	logrus.Infof("[SERVER] Initializing Clock worker")
 	alertEvent := events.AlertEvent{
-		MetricId:               s.config.AlertFileName,
+		MetricId:               s.config.AlertMetricId,
 		Aggregation:            s.config.AlertAggregation,
 		Limit:                  s.config.AlertLimit,
 		AggregationWindowsSecs: s.config.AlertAggregationWindowSecs,
