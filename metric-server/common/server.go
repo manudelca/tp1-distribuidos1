@@ -3,6 +3,9 @@ package common
 import (
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/manudelca/tp1-distribuidos1/metric-server/file_monitor"
@@ -79,6 +82,10 @@ func (s *Server) Run() {
 	}
 	clockWorker := NewClockWorker(queueForAlerts, alertEvent)
 	go clockWorker.Run()
+
+	signalChannel := make(chan os.Signal, 2)
+	signal.Notify(signalChannel, syscall.SIGTERM)
+	go s.handleSignal(signalChannel)
 	for true {
 		client_conn, err := s.acceptNewConnection()
 		if err != nil {
@@ -97,4 +104,13 @@ func (s *Server) acceptNewConnection() (net.Conn, error) {
 	}
 	logrus.Infof("[SERVER] Got connection from %s", clientConn.LocalAddr().String())
 	return clientConn, nil
+}
+
+func (s *Server) handleSignal(signalChannel chan os.Signal) {
+	for signal := range signalChannel {
+		switch signal {
+		case syscall.SIGTERM:
+			logrus.Infof("[SERVER] SIGTERM received. Proceeding to shutdown")
+		}
+	}
 }
