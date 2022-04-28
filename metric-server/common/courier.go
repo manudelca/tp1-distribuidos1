@@ -3,6 +3,7 @@ package common
 import (
 	"net"
 	"reflect"
+	"sync"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
 	"github.com/manudelca/tp1-distribuidos1/metric-server/protocol"
@@ -13,13 +14,15 @@ type Courier struct {
 	metricEventsQueue chan events.MetricEvent
 	queryEventsPool   []chan events.Event
 	alertEventsQueue  chan events.Event
+	wait              *sync.WaitGroup
 }
 
-func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.Event, alertEventsQueue chan events.Event) *Courier {
+func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.Event, alertEventsQueue chan events.Event, wait *sync.WaitGroup) *Courier {
 	courier := Courier{
 		metricEventsQueue: metricEventsQueue,
 		queryEventsPool:   queryEventsPool,
 		alertEventsQueue:  alertEventsQueue,
+		wait:              wait,
 	}
 	return &courier
 }
@@ -30,6 +33,8 @@ func (c *Courier) ServeClients(clientsToServe chan net.Conn) {
 		logrus.Infof("[COURIER] Closing client connection")
 		clientConn.Close()
 	}
+	logrus.Infof("[COURIER] Clients channel closed. Proceeding to shutdown")
+	c.wait.Done()
 }
 
 func (c *Courier) handleClientConnection(clientConn net.Conn) {

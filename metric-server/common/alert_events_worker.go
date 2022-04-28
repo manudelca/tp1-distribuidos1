@@ -14,13 +14,15 @@ type AlertEventsWorker struct {
 	eventsQueue    chan events.Event
 	orderedMetrics []events.MetricEvent
 	fileName       string
+	shutdown       chan bool
 }
 
-func NewAlertEventsWorker(eventsQueue chan events.Event, fileName string) *AlertEventsWorker {
+func NewAlertEventsWorker(eventsQueue chan events.Event, fileName string, alertEventsWorkerShutdown chan bool) *AlertEventsWorker {
 	return &AlertEventsWorker{
 		eventsQueue:    eventsQueue,
 		orderedMetrics: make([]events.MetricEvent, 0),
 		fileName:       fileName,
+		shutdown:       alertEventsWorkerShutdown,
 	}
 }
 
@@ -48,6 +50,7 @@ func (a *AlertEventsWorker) ServeAlertEvents() {
 			a.insertIntoMetrics(metric)
 		}
 	}
+	a.shutdown <- true
 }
 
 func (a *AlertEventsWorker) handleAlert(alert events.AlertEvent) {

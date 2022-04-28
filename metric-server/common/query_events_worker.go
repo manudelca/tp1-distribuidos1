@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/manudelca/tp1-distribuidos1/metric-server/events"
@@ -15,12 +16,14 @@ import (
 type QueryEventsWorker struct {
 	queryEventsQueue chan events.Event
 	fileMonitor      *file_monitor.FileMonitor
+	wait             *sync.WaitGroup
 }
 
-func NewQueryEventsWorker(queryEventsQueue chan events.Event, fileMonitor *file_monitor.FileMonitor) *QueryEventsWorker {
+func NewQueryEventsWorker(queryEventsQueue chan events.Event, fileMonitor *file_monitor.FileMonitor, wait *sync.WaitGroup) *QueryEventsWorker {
 	return &QueryEventsWorker{
 		queryEventsQueue: queryEventsQueue,
 		fileMonitor:      fileMonitor,
+		wait:             wait,
 	}
 }
 
@@ -146,4 +149,5 @@ func (q *QueryEventsWorker) ServeQueryEvents() {
 			q.queryEventsQueue <- result
 		}
 	}
+	q.wait.Done()
 }
