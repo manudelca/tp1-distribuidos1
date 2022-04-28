@@ -30,7 +30,7 @@ func (q *QueryEventsWorker) processFile(fileName string, metricId string, left t
 	min := float32(math.MaxFloat32)
 	max := float32(-math.MaxFloat32)
 	sum := float32(0)
-	for i := 0; true; /* Como hago la condicion de corte? O sea, seria en el EOF pero como detecto eso?*/ i++ {
+	for i := 0; true; i++ {
 		bytes, err := q.fileMonitor.ReadMetric(fileName, i)
 		if err != nil {
 			return 0, 0, 0, 0, err
