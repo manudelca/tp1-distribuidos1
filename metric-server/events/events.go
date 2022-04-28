@@ -10,6 +10,7 @@ const (
 	METRIC EventType = iota
 	QUERY
 	ALERT
+	QUERYRESULT
 )
 
 type MetricEvent struct {
@@ -56,4 +57,18 @@ type AlertEvent struct {
 
 func (a AlertEvent) GetType() EventType {
 	return ALERT
+}
+
+type QueryResultEvent struct {
+	Results []QueryIntervalResult
+}
+
+func (a QueryResultEvent) GetType() EventType {
+	return QUERYRESULT
+}
+
+type QueryIntervalResult struct {
+	FromDate int64
+	ToDate   int64
+	Result   float32
 }

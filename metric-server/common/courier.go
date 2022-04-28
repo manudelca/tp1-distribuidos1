@@ -11,11 +11,11 @@ import (
 
 type Courier struct {
 	metricEventsQueue chan events.MetricEvent
-	queryEventsPool   []chan events.QueryEvent
+	queryEventsPool   []chan events.Event
 	alertEventsQueue  chan events.Event
 }
 
-func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.QueryEvent, alertEventsQueue chan events.Event) *Courier {
+func NewCourier(metricEventsQueue chan events.MetricEvent, queryEventsPool []chan events.Event, alertEventsQueue chan events.Event) *Courier {
 	courier := Courier{
 		metricEventsQueue: metricEventsQueue,
 		queryEventsPool:   queryEventsPool,
@@ -79,6 +79,20 @@ func (c *Courier) answerQueryEvent(queryEvent events.QueryEvent, clientConn net.
 		return
 	}
 	logrus.Infof("[COURIER] Stored query event in queue %d: ", chosen, queryEvent)
+	queryResult := <-c.queryEventsPool[chosen]
+	switch eventType := queryResult.GetType(); eventType {
+	case events.QUERYRESULT:
+		QueryResultEvent, ok := queryResult.(events.QueryResultEvent)
+		if !ok {
+			logrus.Infof("[COURIER] Could not assert event to events.QueryResultEvent")
+			return
+		}
+		logrus.Infof("[COURIER] Query was succesfully calculated")
+		err := protocol.SendQueryResult(QueryResultEvent, clientConn)
+		if err != nil {
+			logrus.Infof("[COURIER] An error ocurred while trying to answer client query. Error: %s", err.Error())
+		}
+	}
 }
 
 func (c *Courier) rejectClient(clientConn net.Conn) {

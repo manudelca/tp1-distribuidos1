@@ -44,7 +44,7 @@ func NewServer(config ServerConfig) (*Server, error) {
 func (s *Server) Run() {
 	clientsToServe := make(chan net.Conn, s.config.Couriers)
 	metricEventsToServe := make(chan events.MetricEvent, s.config.MetricEventsBacklog)
-	queryEventsToServePool := make([]chan events.QueryEvent, s.config.QueryEventsWorkers)
+	queryEventsToServePool := make([]chan events.Event, s.config.QueryEventsWorkers)
 	fileMonitor := file_monitor.NewFileMonitor()
 
 	logrus.Infof("[SERVER] Initializing Metric and Query workers")
@@ -53,7 +53,7 @@ func (s *Server) Run() {
 		go metricEventsWorker.ServeMetricEvents()
 	}
 	for i := 0; i < s.config.QueryEventsWorkers; i++ {
-		queryEventsToServe := make(chan events.QueryEvent, s.config.QueryEventsBacklog)
+		queryEventsToServe := make(chan events.Event, s.config.QueryEventsBacklog)
 		queryEventsToServePool[i] = queryEventsToServe
 		queryEventsWorker := NewQueryEventsWorker(queryEventsToServe, fileMonitor)
 		go queryEventsWorker.ServeQueryEvents()

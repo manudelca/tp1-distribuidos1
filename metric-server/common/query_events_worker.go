@@ -13,11 +13,11 @@ import (
 )
 
 type QueryEventsWorker struct {
-	queryEventsQueue chan events.QueryEvent
+	queryEventsQueue chan events.Event
 	fileMonitor      *file_monitor.FileMonitor
 }
 
-func NewQueryEventsWorker(queryEventsQueue chan events.QueryEvent, fileMonitor *file_monitor.FileMonitor) *QueryEventsWorker {
+func NewQueryEventsWorker(queryEventsQueue chan events.Event, fileMonitor *file_monitor.FileMonitor) *QueryEventsWorker {
 	return &QueryEventsWorker{
 		queryEventsQueue: queryEventsQueue,
 		fileMonitor:      fileMonitor,
@@ -90,9 +90,9 @@ func (q *QueryEventsWorker) processTimeInterval(metricId string, aggregationType
 	return count, min, max, sum / count, nil
 }
 
-func (q *QueryEventsWorker) handleQueryEvent(queryEvent events.QueryEvent) {
+func (q *QueryEventsWorker) handleQueryEvent(queryEvent events.QueryEvent) events.QueryResultEvent {
 	logrus.Infof("[QUERY EVENTS WORKER] Processing query event: ", queryEvent)
-	result := make([]float32, 0)
+	result := make([]events.QueryIntervalResult, 0)
 	fromDate := time.Unix(queryEvent.FromDate, 0)
 	toDate := time.Unix(queryEvent.ToDate, 0)
 	timeWindow := time.Duration(queryEvent.AggregationWindowsSecs * 1e9)
@@ -117,17 +117,31 @@ func (q *QueryEventsWorker) handleQueryEvent(queryEvent events.QueryEvent) {
 			case events.AVG:
 				resultInterval = avg
 			}
+			queryResult := events.QueryIntervalResult{
+				FromDate: leftWindowLimit.Unix(),
+				ToDate:   rightWindowLimit.Unix(),
+				Result:   resultInterval,
+			}
+			result = append(result, queryResult)
 		}
-		result = append(result, resultInterval)
 		leftWindowLimit = rightWindowLimit
 	}
 	logrus.Infof("[QUERY EVENTS WORKER] Finished processing every time window")
-	logrus.Infof("[QUERY EVENTS WORKER] Result: ", result)
-	logrus.Infof("[QUERY EVENTS WORKER] Result len: ", len(result))
+	logrus.Infof("[QUERY EVENTS WORKER] Result len: %d", len(result))
+	return events.QueryResultEvent{Results: result}
 }
 
 func (q *QueryEventsWorker) ServeQueryEvents() {
 	for queryEvent := range q.queryEventsQueue {
-		q.handleQueryEvent(queryEvent)
+		switch eventType := queryEvent.GetType(); eventType {
+		case events.QUERY:
+			query, ok := queryEvent.(events.QueryEvent)
+			if !ok {
+				logrus.Infof("[QUERY EVENTS WORKER] Could not assert event to events.QueryEvent")
+				continue
+			}
+			result := q.handleQueryEvent(query)
+			q.queryEventsQueue <- result
+		}
 	}
 }

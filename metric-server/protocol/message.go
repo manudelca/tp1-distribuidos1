@@ -4,6 +4,7 @@ type MsgType uint8
 
 const (
 	Success MsgType = iota
+	SuccessQueryResult
 	FormatError
 	ServerError
 )
