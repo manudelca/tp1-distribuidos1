@@ -68,5 +68,10 @@ func SendQueryResult(queryResult events.QueryResultEvent, clientConn net.Conn) e
 		bytesToSend = append(bytesToSend, resultBytes...)
 	}
 
+	bytesLen := uint16(len(bytesToSend))
+	var bytesLenArray [2]byte
+	binary.BigEndian.PutUint16(bytesLenArray[:], bytesLen)
+	bytesToSend = append(bytesLenArray[:], bytesToSend...)
+
 	return util.SendToConnection(clientConn, bytesToSend)
 }

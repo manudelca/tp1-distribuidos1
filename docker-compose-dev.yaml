@@ -15,101 +15,121 @@ services:
     networks:
     - testing_net
 
-  test-client1:
-    container_name: test-client1
-    image: test-client:latest
-    entrypoint: /test-client
-    environment:
-      - CLI_ID=1
-      - CLI_SERVER_ADDRESS=metric-server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOOP_PERIOD=5s
-      - CLI_LOG_LEVEL=DEBUG
-      - CLI_TYPE=METRIC
+  test-client-metric1:
+    container_name: test-client-metric1
+    image: test-client-metric:latest
+    entrypoint: /test-client-metric
     networks:
       - testing_net
     depends_on:
       - metric-server
 
-  test-client2:
-    container_name: test-client2
-    image: test-client:latest
-    entrypoint: /test-client
-    environment:
-      - CLI_ID=2
-      - CLI_SERVER_ADDRESS=metric-server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOOP_PERIOD=5s
-      - CLI_LOG_LEVEL=DEBUG
-      - CLI_TYPE=QUERY
+  test-client-query1:
+    container_name: test-client-query1
+    image: test-client-query:latest
+    entrypoint: /test-client-query
     networks:
       - testing_net
     depends_on:
       - metric-server
 
-  test-client3:
-    container_name: test-client3
-    image: test-client:latest
-    entrypoint: /test-client
-    environment:
-      - CLI_ID=3
-      - CLI_SERVER_ADDRESS=metric-server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOOP_PERIOD=5s
-      - CLI_LOG_LEVEL=DEBUG
-      - CLI_TYPE=METRIC
-    networks:
-      - testing_net
-    depends_on:
-      - metric-server
+  # For a heavy load test (?)
+  # 
+  # test-client1:
+  #   container_name: test-client1
+  #   image: test-client:latest
+  #   entrypoint: /test-client
+  #   environment:
+  #     - CLI_ID=1
+  #     - CLI_SERVER_ADDRESS=metric-server:12345
+  #     - CLI_LOOP_LAPSE=1m2s
+  #     - CLI_LOOP_PERIOD=5s
+  #     - CLI_LOG_LEVEL=DEBUG
+  #     - CLI_TYPE=METRIC
+  #   networks:
+  #     - testing_net
+  #   depends_on:
+  #     - metric-server
 
-  test-client4:
-    container_name: test-client4
-    image: test-client:latest
-    entrypoint: /test-client
-    environment:
-      - CLI_ID=4
-      - CLI_SERVER_ADDRESS=metric-server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOOP_PERIOD=5s
-      - CLI_LOG_LEVEL=DEBUG
-      - CLI_TYPE=METRIC
-    networks:
-      - testing_net
-    depends_on:
-      - metric-server
+  # test-client2:
+  #   container_name: test-client2
+  #   image: test-client:latest
+  #   entrypoint: /test-client
+  #   environment:
+  #     - CLI_ID=2
+  #     - CLI_SERVER_ADDRESS=metric-server:12345
+  #     - CLI_LOOP_LAPSE=1m2s
+  #     - CLI_LOOP_PERIOD=5s
+  #     - CLI_LOG_LEVEL=DEBUG
+  #     - CLI_TYPE=QUERY
+  #   networks:
+  #     - testing_net
+  #   depends_on:
+  #     - metric-server
 
-  test-client5:
-    container_name: test-client5
-    image: test-client:latest
-    entrypoint: /test-client
-    environment:
-      - CLI_ID=5
-      - CLI_SERVER_ADDRESS=metric-server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOOP_PERIOD=5s
-      - CLI_LOG_LEVEL=DEBUG
-      - CLI_TYPE=QUERY
-    networks:
-      - testing_net
-    depends_on:
-      - metric-server
+  # test-client3:
+  #   container_name: test-client3
+  #   image: test-client:latest
+  #   entrypoint: /test-client
+  #   environment:
+  #     - CLI_ID=3
+  #     - CLI_SERVER_ADDRESS=metric-server:12345
+  #     - CLI_LOOP_LAPSE=1m2s
+  #     - CLI_LOOP_PERIOD=5s
+  #     - CLI_LOG_LEVEL=DEBUG
+  #     - CLI_TYPE=METRIC
+  #   networks:
+  #     - testing_net
+  #   depends_on:
+  #     - metric-server
 
-  test-client6:
-    container_name: test-client6
-    image: test-client:latest
-    entrypoint: /test-client
-    environment:
-      - CLI_ID=6
-      - CLI_SERVER_ADDRESS=metric-server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOOP_PERIOD=5s
-      - CLI_LOG_LEVEL=DEBUG
-      - CLI_TYPE=QUERY
-    networks:
-      - testing_net
-    depends_on:
-      - metric-server
+  # test-client4:
+  #   container_name: test-client4
+  #   image: test-client:latest
+  #   entrypoint: /test-client
+  #   environment:
+  #     - CLI_ID=4
+  #     - CLI_SERVER_ADDRESS=metric-server:12345
+  #     - CLI_LOOP_LAPSE=1m2s
+  #     - CLI_LOOP_PERIOD=5s
+  #     - CLI_LOG_LEVEL=DEBUG
+  #     - CLI_TYPE=METRIC
+  #   networks:
+  #     - testing_net
+  #   depends_on:
+  #     - metric-server
+
+  # test-client5:
+  #   container_name: test-client5
+  #   image: test-client:latest
+  #   entrypoint: /test-client
+  #   environment:
+  #     - CLI_ID=5
+  #     - CLI_SERVER_ADDRESS=metric-server:12345
+  #     - CLI_LOOP_LAPSE=1m2s
+  #     - CLI_LOOP_PERIOD=5s
+  #     - CLI_LOG_LEVEL=DEBUG
+  #     - CLI_TYPE=QUERY
+  #   networks:
+  #     - testing_net
+  #   depends_on:
+  #     - metric-server
+
+  # test-client6:
+  #   container_name: test-client6
+  #   image: test-client:latest
+  #   entrypoint: /test-client
+  #   environment:
+  #     - CLI_ID=6
+  #     - CLI_SERVER_ADDRESS=metric-server:12345
+  #     - CLI_LOOP_LAPSE=1m2s
+  #     - CLI_LOOP_PERIOD=5s
+  #     - CLI_LOG_LEVEL=DEBUG
+  #     - CLI_TYPE=QUERY
+  #   networks:
+  #     - testing_net
+  #   depends_on:
+  #     - metric-server
 
 networks:
   testing_net:
